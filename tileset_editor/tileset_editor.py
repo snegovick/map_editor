@@ -21,9 +21,6 @@ class Screen(gtk.DrawingArea):
         ep.process()
         return True
 
-    def save_project(self, *args):
-        print "save project"
-
     def update(self):
         self.queue_draw()
 
@@ -63,6 +60,7 @@ class Screen(gtk.DrawingArea):
         # Create the cairo context
         #state.offset = (self.allocation.width/2,self.allocation.height/2)
         state.set_screen_offset((self.allocation.width/2, self.allocation.height/2))
+        scale = state.get_scale()
         
         offset = state.get_offset()
 
@@ -78,6 +76,31 @@ class Screen(gtk.DrawingArea):
         cr.set_source_rgb(1.0, 1.0, 1.0)
         cr.rectangle(0, 0, self.allocation.width, self.allocation.height)
         cr.fill()
+
+        cr.set_source_rgb(0, 0, 0)
+        cr.set_line_width(0.1)
+        cr.translate(offset[0], offset[1])
+
+        cr.scale(scale[0], scale[1])        
+        grid_step = state.get_grid_step()
+        for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
+            cr.move_to(0, y)
+            cr.line_to(self.allocation.width/scale[0], y)
+
+        for x in range(0, int(self.allocation.width/scale[0]), grid_step[0]):
+            cr.move_to(x, 0)
+            cr.line_to(x, self.allocation.height/scale[1])
+        cr.stroke()
+        cr.identity_matrix()
+
+        
+        images = state.get_images()
+        cr.translate(offset[0], offset[1])
+        cr.scale(state.scale[0], state.scale[1])
+        for img in images:
+            img.draw(cr)
+        cr.identity_matrix()
+        
 
         # if state.tool_operations!=None:
         #     cr.translate(offset[0], offset[1])

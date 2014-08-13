@@ -36,12 +36,12 @@ class MainWindow(object):
         self.file_menu.append(sep_quit)
         self.file_menu.append(self.quit_item)
 
-        self.import_item.connect("activate", lambda *args: ep.push_event(ee.load_click, args))
-        self.export_item.connect("activate", lambda *args: ep.push_event(ee.save_click, args))
-        self.new_project_item.connect("activate", lambda *args: ep.push_event(ee.new_project_click, args))
-        self.open_project_item.connect("activate", lambda *args: ep.push_event(ee.load_project_click, args))
-        self.save_project_item.connect("activate", lambda *args: ep.push_event(ee.save_project_click, args))
-        self.quit_item.connect("activate", lambda *args: ep.push_event(ee.quit_click, args))
+        self.import_item.connect("activate", lambda *args: ep.push_event(EVEnum.load_click, args))
+        self.export_item.connect("activate", lambda *args: ep.push_event(EVEnum.save_click, args))
+        self.new_project_item.connect("activate", lambda *args: ep.push_event(EVEnum.new_project_click, args))
+        self.open_project_item.connect("activate", lambda *args: ep.push_event(EVEnum.load_project_click, args))
+        self.save_project_item.connect("activate", lambda *args: ep.push_event(EVEnum.save_project_click, args))
+        self.quit_item.connect("activate", lambda *args: ep.push_event(EVEnum.quit_click, args))
 
         self.window_vbox = gtk.VBox(homogeneous=False, spacing=0)
         self.window_vbox.pack_start(self.menu_bar, expand=False, fill=False, padding=0)
@@ -65,9 +65,9 @@ class MainWindow(object):
         self.widget_hbox = gtk.HBox(homogeneous=False, spacing=0)
         self.widget_vbox = gtk.VBox(homogeneous=False, spacing=0)
         self.widget_hscroll = gtk.HScrollbar(gtk.Adjustment(0.0, -1000.0, 1000.0, 0.1, 1.0, 1.0))
-        self.widget_hscroll.connect("value-changed", lambda *args: ep.push_event(ee.hscroll, (args)))
+        self.widget_hscroll.connect("value-changed", lambda *args: ep.push_event(EVEnum.hscroll, (args)))
         self.widget_vscroll = gtk.VScrollbar(gtk.Adjustment(0.0, -1000.0, 1000.0, 0.1, 1.0, 1.0))
-        self.widget_vscroll.connect("value-changed", lambda *args: ep.push_event(ee.vscroll, (args)))
+        self.widget_vscroll.connect("value-changed", lambda *args: ep.push_event(EVEnum.vscroll, (args)))
         self.widget_hbox.pack_start(self.widget, expand=True, fill=True, padding=0)
         self.widget_hbox.pack_start(self.widget_vscroll, expand=False, fill=False, padding=0)
         self.widget_vbox.pack_start(self.widget_hbox, expand=True, fill=True)
@@ -176,7 +176,8 @@ class MainWindow(object):
         check_button.set_active(True)
         check_button.unset_flags(gtk.CAN_FOCUS)
         check_button.show()
-        check_button.connect("clicked", lambda *args: ep.push_event(event, (label_text, args)))
+        if event != None:
+            check_button.connect("clicked", lambda *args: ep.push_event(event, (label_text, args)))
 
         label = gtk.Label(label_text)
         label.show()
@@ -207,7 +208,7 @@ class MainWindow(object):
         label.show()
         dct["label"] = label
         spin = gtk.SpinButton(adjustment=gtk.Adjustment(value=value, lower=lower, upper=upper, step_incr=step_incr, page_incr=page_incr, page_size=0), climb_rate=0.01, digits=3)
-        spin.connect("value-changed", lambda *args: ep.push_event(ee.update_settings, (data, args)))
+        spin.connect("value-changed", lambda *args: ep.push_event(EVEnum.update_settings, (data, args)))
         spin.show()
         dct["spin"] = spin
         hbox.pack_start(label, expand=False, fill=False, padding=0)
@@ -237,28 +238,28 @@ class MainWindow(object):
         self.left_vbox = gtk.VBox(homogeneous=False, spacing=0)
 
         self.new_sprite_button = gtk.Button("New sprite")
-        self.new_sprite_button.connect("clicked", lambda *args: ep.push_event(ee.new_sprite_click, args))
+        self.new_sprite_button.connect("clicked", lambda *args: ep.push_event(EVEnum.new_sprite_click, args))
         self.left_vbox.pack_start(self.new_sprite_button, expand=False, fill=False, padding=0)
 
         self.load_image_button = gtk.Button("Load image")
-        self.load_image_button.connect("clicked", lambda *args: ep.push_event(ee.load_image_click, args))
+        self.load_image_button.connect("clicked", lambda *args: ep.push_event(EVEnum.load_image_click, args))
         self.left_vbox.pack_start(self.load_image_button, expand=False, fill=False, padding=0)
 
         self.images_label = gtk.Label("Source images")
         self.scrolled_window = gtk.ScrolledWindow()
         self.gtklist = gtk.List()
-        self.gtklist.connect("selection_changed", lambda *args: ep.push_event(ee.image_list_selection_changed, args))
+        self.gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.image_list_selection_changed, args))
         self.scrolled_window.add_with_viewport(self.gtklist)
         self.left_vbox.pack_start(self.images_label, expand=False, fill=False, padding=0)
         self.left_vbox.pack_start(self.scrolled_window, expand=True, fill=True, padding=0)
         self.image_delete_button = gtk.Button("Delete image")
-        self.image_delete_button.connect("clicked", lambda *args: ep.push_event(ee.image_delete_image_button_click, None))
+        self.image_delete_button.connect("clicked", lambda *args: ep.push_event(EVEnum.image_delete_image_button_click, None))
         self.left_vbox.pack_start(self.image_delete_button, expand=False, fill=False, padding=0)
 
         self.sprites_label = gtk.Label("Sprites")
         self.sp_scrolled_window = gtk.ScrolledWindow()
         self.sp_gtklist = gtk.List()
-        self.sp_gtklist.connect("selection_changed", lambda *args: ep.push_event(ee.tool_operations_list_selection_changed, args))
+        self.sp_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.tool_operations_list_selection_changed, args))
         self.sp_scrolled_window.add_with_viewport(self.sp_gtklist)
 
         self.left_vbox.pack_start(self.sprites_label, expand=False, fill=False, padding=0)

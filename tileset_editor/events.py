@@ -5,6 +5,7 @@ import sys
 
 from state import state, State
 from project import project
+import utils
 
 class EVEnum:
     scroll_up = "scroll_up"
@@ -15,6 +16,7 @@ class EVEnum:
     pointer_motion = "pointer_motion"
     screen_left_press = "screen_left_press"
     screen_left_release = "screen_left_release"
+    load_image_click = "load_image_click"
 
 
 class EventProcessor(object):
@@ -36,6 +38,7 @@ class EventProcessor(object):
             EVEnum.pointer_motion: self.pointer_motion,
             EVEnum.screen_left_press: self.screen_left_press,
             EVEnum.screen_left_release: self.screen_left_release,
+            EVEnum.load_image_click: self.load_image_click,
         }
 
     def reset(self):
@@ -45,7 +48,7 @@ class EventProcessor(object):
         self.left_press_start = None
 
     def push_event(self, event, *args):
-        print "pushing", event 
+        #print "pushing", event 
         self.event_list.append((event, args))
 
     def process(self):
@@ -57,10 +60,21 @@ class EventProcessor(object):
         self.event_list = []
 
     def scroll_up(self, args):
-        pass
+        scale = state.get_scale()
+        if scale[0]<=1:
+            state.set_scale((scale[0]+0.1, scale[1]+0.1))
+        else:
+            state.set_scale((scale[0]+1, scale[1]+1))
+        self.mw.widget.update()
 
     def scroll_down(self, args):
-        pass
+        scale = state.get_scale()
+        if scale[0]>0.1:
+            if scale[0]<=1:
+                state.set_scale((scale[0]-0.1, scale[1]-0.1))
+            else:
+                state.set_scale((scale[0]-1, scale[1]-1))
+            self.mw.widget.update()
 
     def shift_press(self, args):
         pass
@@ -69,13 +83,51 @@ class EventProcessor(object):
         pass
 
     def pointer_motion(self, args):
-        pass
+        offset = state.get_offset()
+        scale = state.get_scale()
+        cx = (args[0][0]-offset[0])/scale[0]
+        cy = (args[0][1]-offset[1])/scale[1]
+        pointer_position = (cx, cy)
+
+        if state.get_left_press_start() != None:
+            prev_position = state.get_pointer_position()
+            grid_step = state.get_grid_step()
+            print "cx, cy", cx, cy
+            images = state.get_selected_images()
+            for i in images:
+                i.set_origin((int(cx/8)*8, int(cy/8)*8))
+            self.mw.widget.update()
+        state.set_pointer_position(pointer_position)
+        self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
+            
 
     def screen_left_press(self, args):
-        pass
+        offset = state.get_offset()
+        scale = state.get_scale()
+        cx = (args[0][0]-offset[0])/scale[0]
+        cy = (args[0][1]-offset[1])/scale[1]
+        state.set_left_press_start((cx, cy))
+
+
+        images = state.get_images()
+        
+        for img in images:
+            if img.point_in_aabb([cx, cy]):
+                print "toggling:", img
+                if (img.toggle_selected()):
+                    state.add_im_to_selected(img)
+                else:
+                    state.remove_im_from_selected(img)
+        self.mw.widget.update()
+
 
     def screen_left_release(self, args):
-        pass
+        offset = state.get_offset()
+        scale = state.get_scale()
+        cx = (args[0][0]-offset[0])/scale[0]
+        cy = (args[0][1]-offset[1])/scale[1]
+
+        state.reset_left_press_start()
 
     def update_settings(self, args):
         print "settings update:", args
@@ -85,6 +137,21 @@ class EventProcessor(object):
         project.push_state(state)
         self.mw.widget.update()
 
+    def update_images_list(self, args):
+        images = state.get_images()
+        if  images != None:
+            self.mw.clear_list(self.mw.gtklist)
+            for p in images:
+                self.mw.add_item_to_list(self.mw.gtklist, p.name, None)
+        project.push_state(state)
 
+    def load_image_click(self, args):
+        mimes = [("Images (*.png)", "Image/png", "*.png")]
+        result = self.mw.mk_file_dialog("Open ...", mimes)
+        if result != None:
+            image_name = result
+            state.load_image(image_name)
+            self.update_images_list(None)
+            self.mw.widget.update()
 
 ep = EventProcessor()
