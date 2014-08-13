@@ -118,6 +118,28 @@ class MainWindow(object):
         md.destroy()
         return ret
 
+    def mk_textbox_dialog(self, question):
+        md = gtk.Dialog(title=question, parent=self.window, flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
+        ok_button = md.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        cancel_button = md.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        ok_button.grab_default()
+        vbox = md.get_content_area()
+
+        l = gtk.Label(question)
+        l.show()
+        vbox.pack_end(l)
+
+        entry = gtk.Entry()
+        entry.show()
+        vbox.pack_start(entry)
+        response = md.run()
+        ret = True
+        if response == gtk.RESPONSE_CANCEL:
+            ret = False, None
+        text = entry.get_text()
+        md.destroy()
+        return ret, text
+
     def mk_file_dialog(self, name, mimes):
         ret = None
         dialog = gtk.FileChooserDialog(name,
@@ -237,9 +259,13 @@ class MainWindow(object):
     def __mk_left_vbox(self):
         self.left_vbox = gtk.VBox(homogeneous=False, spacing=0)
 
-        self.new_sprite_button = gtk.Button("New sprite")
+        self.new_sprite_button = gtk.Button("New sprite from selection")
         self.new_sprite_button.connect("clicked", lambda *args: ep.push_event(EVEnum.new_sprite_click, args))
         self.left_vbox.pack_start(self.new_sprite_button, expand=False, fill=False, padding=0)
+
+        self.add_to_selected_sprite_button = gtk.Button("Add to selected sprite")
+        self.add_to_selected_sprite_button.connect("clicked", lambda *args: ep.push_event(EVEnum.add_to_selected_sprite_click, args))
+        self.left_vbox.pack_start(self.add_to_selected_sprite_button, expand=False, fill=False, padding=0)
 
         self.load_image_button = gtk.Button("Load image")
         self.load_image_button.connect("clicked", lambda *args: ep.push_event(EVEnum.load_image_click, args))
@@ -259,7 +285,7 @@ class MainWindow(object):
         self.sprites_label = gtk.Label("Sprites")
         self.sp_scrolled_window = gtk.ScrolledWindow()
         self.sp_gtklist = gtk.List()
-        self.sp_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.tool_operations_list_selection_changed, args))
+        self.sp_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.sprites_selection_changed, args))
         self.sp_scrolled_window.add_with_viewport(self.sp_gtklist)
 
         self.left_vbox.pack_start(self.sprites_label, expand=False, fill=False, padding=0)
@@ -267,9 +293,6 @@ class MainWindow(object):
         self.sprite_delete_button = gtk.Button("Delete sprite")
         self.sprite_delete_button.connect("clicked", lambda *args: ep.push_event(EVEnum.sprite_delete_button_click, None))
         self.left_vbox.pack_start(self.sprite_delete_button, expand=False, fill=False, padding=0)
-
-        self.tool_ops_label = gtk.Label("Tool operations")
-        self.left_vbox.pack_start(self.tool_ops_label, expand=False, fill=False, padding=0)
 
 
 

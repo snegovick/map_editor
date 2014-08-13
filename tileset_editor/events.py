@@ -5,6 +5,7 @@ import sys
 
 from state import state, State
 from project import project
+from sprite import Sprite
 import utils
 
 class EVEnum:
@@ -17,7 +18,8 @@ class EVEnum:
     screen_left_press = "screen_left_press"
     screen_left_release = "screen_left_release"
     load_image_click = "load_image_click"
-
+    image_list_selection_changed = "image_list_selection_changed"
+    new_sprite_click = "new_sprite_click"
 
 class EventProcessor(object):
     event_list = []
@@ -40,6 +42,8 @@ class EventProcessor(object):
             EVEnum.screen_left_press: self.screen_left_press,
             EVEnum.screen_left_release: self.screen_left_release,
             EVEnum.load_image_click: self.load_image_click,
+            EVEnum.image_list_selection_changed: self.image_list_selection_changed,
+            EVEnum.new_sprite_click: self.new_sprite_click,
         }
 
     def reset(self):
@@ -173,5 +177,34 @@ class EventProcessor(object):
             state.load_image(image_name)
             self.update_images_list(None)
             self.mw.widget.update()
+
+    def update_sprites_list(self, args):
+        sprites = state.get_sprites()
+        if sprites != None:
+            self.mw.clear_list(self.mw.sp_gtklist)
+            for p in sprites:
+                self.mw.add_item_to_list(self.mw.sp_gtklist, p.name, None)
+        project.push_state(state)
+
+    def new_sprite_click(self, args):
+        selected = state.get_selected_images()
+        print selected
+        if selected != []:
+            res, text = self.mw.mk_textbox_dialog("Enter sprite name:")
+            print "result:", res, text
+            if res:
+                s = Sprite(selected, text)
+                state.add_sprite(s)
+                self.update_sprites_list(None)
+
+    def image_list_selection_changed(self, args):
+        selection = args[0][0].get_selection()
+        state.unselect_all_images()
+        for i in selection:
+            name = i.children()[0].children()[1].get_text()
+            for img in state.get_images():
+                if img.name == name:
+                    state.add_im_to_selected(img)
+        self.mw.widget.update()
 
 ep = EventProcessor()

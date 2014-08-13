@@ -11,7 +11,17 @@ class State:
         self.selected_images = []
         self.shift_pressed = False
         self.pointer_position = None
+        self.sprites = []
 
+    def get_sprites(self):
+        return self.sprites
+
+    def add_sprite(self, s):
+        self.sprites.append(s)
+
+    def remove_sprite(self, s):
+        if s in self.sprites:
+            self.sprites.remove(s)
 
     def set_shift_pressed(self):
         self.shift_pressed = True
