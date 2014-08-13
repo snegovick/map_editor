@@ -26,12 +26,14 @@ class Image:
             cr.stroke()
         cr.translate(-self.origin[0], -self.origin[1])
 
-    def toggle_selected(self):
-        self.selected = not self.selected
-        return self.selected
+    def set_selected(self):
+        self.selected = True
 
     def unselect(self):
         self.selected = False
+        
+    def get_selected(self):
+        return self.selected
 
     def get_aabb(self):
         return self.aabb
@@ -43,6 +45,9 @@ class Image:
         self.origin[0] = origin[0]
         self.origin[1] = origin[1]
         self.aabb = utils.AABB(self.origin[0], self.origin[1], self.dimensions[0], self.dimensions[1])
+
+    def get_origin(self):
+        return self.origin
 
     def move_origin(self, delta):
         self.origin[0] += delta[0]
@@ -75,8 +80,18 @@ class State:
         self.images = []
         self.left_press_start = None
         self.selected_images = []
-
+        self.shift_pressed = False
         self.pointer_position = None
+
+
+    def set_shift_pressed(self):
+        self.shift_pressed = True
+
+    def reset_shift_pressed(self):
+        self.shift_pressed = False
+
+    def get_shift_pressed(self):
+        return self.shift_pressed
 
     def set_pointer_position(self, pt):
         self.pointer_position = pt
@@ -86,9 +101,12 @@ class State:
 
     def add_im_to_selected(self, im):
         self.selected_images.append(im)
+        im.set_selected()
 
     def remove_im_from_selected(self, im):
-        self.selected_images.remove(im)
+        if im in self.selected_images:
+            self.selected_images.remove(im)
+        im.unselect()
 
     def get_selected_images(self):
         return self.selected_images
