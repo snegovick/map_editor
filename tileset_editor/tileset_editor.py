@@ -66,7 +66,7 @@ class Screen(gtk.DrawingArea):
 
         cr_gdk = self.window.cairo_create()
         surface = cr_gdk.get_target()
-        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, self.allocation.width, self.allocation.height)
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(state.atlas_size*scale[0]), int(state.atlas_size*scale[1]))
         cr = cairo.Context(cr_surf)
         
         # Restrict Cairo to the exposed area; avoid extra work
@@ -74,14 +74,14 @@ class Screen(gtk.DrawingArea):
         cr.clip()
 
         cr.set_source_rgb(1.0, 1.0, 1.0)
-        cr.rectangle(0, 0, self.allocation.width, self.allocation.height)
+        cr.rectangle(0, 0, int(state.atlas_size*scale[0]), int(state.atlas_size*scale[1]))
         cr.fill()
 
         cr.set_source_rgb(0, 0, 0)
         cr.set_line_width(0.1)
         cr.translate(offset[0], offset[1])
 
-        cr.scale(scale[0], scale[1])        
+        cr.scale(scale[0], scale[1])
         grid_step = state.get_grid_step()
         for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
             cr.move_to(0, y)
@@ -101,33 +101,6 @@ class Screen(gtk.DrawingArea):
             img.draw(cr)
         cr.identity_matrix()
         
-
-        # if state.tool_operations!=None:
-        #     cr.translate(offset[0], offset[1])
-        #     cr.scale(state.scale[0], state.scale[1])
-        #     for o in state.tool_operations:
-        #         o.draw(cr)
-        #     cr.identity_matrix()
-        
-        # if state.paths!=None:
-        #     cr.translate(offset[0], offset[1])
-        #     cr.scale(state.scale[0], state.scale[1])
-        #     for p in state.paths:
-        #         p.draw(cr)
-        #     cr.identity_matrix()
-
-
-        # # draw selection box
-        # if ep.left_press_start != None:
-        #     cr.translate(offset[0], offset[1])
-        #     cr.scale(state.scale[0], state.scale[1])
-        #     state.settings.select_box_lt.set_lt(cr)
-        #     w = ep.pointer_position[0] - ep.left_press_start[0]
-        #     h = ep.pointer_position[1] - ep.left_press_start[1]
-        #     cr.rectangle(ep.left_press_start[0], ep.left_press_start[1], w, h)
-        #     cr.fill()
-        #     cr.identity_matrix()
-
         cr_gdk.set_source_surface(cr_surf)
         cr_gdk.paint()
 

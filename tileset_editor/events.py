@@ -20,6 +20,16 @@ class EVEnum:
     load_image_click = "load_image_click"
     image_list_selection_changed = "image_list_selection_changed"
     new_sprite_click = "new_sprite_click"
+    export_click = "export_click"
+    save_project_click = "save_click"
+    load_project_click = "load_click"
+    sprites_selection_changed = "sprites_selection_changed"
+    add_to_selected_sprite_click = "add_to_selected_sprite_click"
+    sprite_elements_list_selection_changed = "sprite_elements_list_selection_changed"
+    sprite_image_remove_button_click = "sprite_image_remove_button_click"
+    sprite_image_up_click = "sprite_image_up_click"
+    sprite_image_down_click = "sprite_image_down_click"
+
 
 class EventProcessor(object):
     event_list = []
@@ -44,6 +54,15 @@ class EventProcessor(object):
             EVEnum.load_image_click: self.load_image_click,
             EVEnum.image_list_selection_changed: self.image_list_selection_changed,
             EVEnum.new_sprite_click: self.new_sprite_click,
+            EVEnum.export_click: self.export_click,
+            EVEnum.save_project_click: self.save_project_click,
+            EVEnum.load_project_click: self.load_project_click,
+            EVEnum.sprites_selection_changed: self.sprites_selection_changed,
+            EVEnum.add_to_selected_sprite_click: self.add_to_selected_sprite_click,
+            EVEnum.sprite_elements_list_selection_changed: self.sprite_elements_list_selection_changed,
+            EVEnum.sprite_image_remove_button_click: self.sprite_image_remove_button_click,
+            EVEnum.sprite_image_up_click: self.sprite_image_up_click,
+            EVEnum.sprite_image_down_click: self.sprite_image_down_click,
         }
 
     def reset(self):
@@ -66,20 +85,16 @@ class EventProcessor(object):
 
     def scroll_up(self, args):
         scale = state.get_scale()
-        if scale[0]<=1:
-            state.set_scale((scale[0]+0.1, scale[1]+0.1))
-        else:
-            state.set_scale((scale[0]+1, scale[1]+1))
+        state.set_scale((scale[0]+0.1, scale[1]+0.1))
         self.mw.widget.update()
+        print "scale:", scale
 
     def scroll_down(self, args):
         scale = state.get_scale()
-        if scale[0]>0.1:
-            if scale[0]<=1:
-                state.set_scale((scale[0]-0.1, scale[1]-0.1))
-            else:
-                state.set_scale((scale[0]-1, scale[1]-1))
+        if scale[0]>0.2:
+            state.set_scale((scale[0]-0.1, scale[1]-0.1))
             self.mw.widget.update()
+        print "scale:", scale
 
     def shift_press(self, args):
         state.set_shift_pressed()
@@ -206,5 +221,88 @@ class EventProcessor(object):
                 if img.name == name:
                     state.add_im_to_selected(img)
         self.mw.widget.update()
+
+    def export_click(self, args):
+        mimes = [("Tileset (*)", "", "*")]
+        result = self.mw.mk_file_save_dialog("Save tileset ...", mimes)
+        if result!=None:
+            state.export(result)
+        
+
+    def save_project_click(self, args):
+        mimes = [("Tileset project (*.tset)", "Application/tset", "*.tset")]
+        result = self.mw.mk_file_save_dialog("Save project ...", mimes)
+        if result!=None:
+            project.save(result)
+
+    def load_project_click(self, args):
+        mimes = [("Tileset project (*.tset)", "Application/tset", "*.tset")]
+        result = self.mw.mk_file_dialog("Open project ...", mimes)
+        if result!=None:
+            project.load(result)
+            self.update_images_list(None)
+            self.update_sprites_list(None)
+            self.mw.widget.update()
+
+    def update_sprite_images_list(self, args):
+        sprite = state.get_selected_sprite()
+        if sprite!=None:
+            images = sprite.get_images()
+            if images != None:
+                self.mw.clear_list(self.mw.sprite_gtklist)
+                for p in images:
+                    self.mw.add_item_to_list(self.mw.sprite_gtklist, p.name, None)
+
+    def sprites_selection_changed(self, args):
+        selection = args[0][0].get_selection()
+        state.unselect_sprite()
+        name = selection[0].children()[0].children()[1].get_text()
+        for s in state.get_sprites():
+            if s.name == name:
+                state.set_selected_sprite(s)
+                self.update_sprite_images_list(None)
+                print state.get_selected_sprite()
+                break
+
+    def add_to_selected_sprite_click(self, args):
+        sprite = state.get_selected_sprite()
+        if sprite != None:
+            images = state.get_selected_images()
+            if images != []:
+                sprite.add_images(images)
+                self.update_sprite_images_list(None)
+
+    def sprite_elements_list_selection_changed(self, args):
+        selection = args[0][0].get_selection()
+        if selection != []:
+            name = selection[0].children()[0].children()[1].get_text()
+            sprite = state.get_selected_sprite()
+            print "sprite:", sprite
+            if sprite != None:
+                for i in sprite.get_images():
+                    if i.name == name:
+                        sprite.set_selected_image(i)
+                        break
+
+    def sprite_image_remove_button_click(self, args):
+        sprite = state.get_selected_sprite()
+        print sprite
+        if sprite != None:
+            sprite.remove_selected_image()
+            self.update_sprite_images_list(None)
+
+    def sprite_image_down_click(self, args):
+        sprite = state.get_selected_sprite()
+        if sprite != None:
+            if len(sprite.get_images()) > 1:
+                sprite.down_selected_image()
+                self.update_sprite_images_list(None)
+
+    def sprite_image_up_click(self, args):
+        sprite = state.get_selected_sprite()
+        if sprite != None:
+            if len(sprite.get_images()) > 1:
+                sprite.up_selected_image()
+                self.update_sprite_images_list(None)
 
 ep = EventProcessor()

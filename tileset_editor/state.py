@@ -1,17 +1,38 @@
 from generalized_settings import TOSetting
-import os
 from image import *
+from sprite import *
+
+import json
+import os
 
 class State:
-    def __init__(self, grid_step=[8,8]):
-        self.grid_step = grid_step
+    def __init__(self, grid_step=[8,8], atlas_size=512, data=None):
         self.scale = [1, 1]
-        self.images = []
         self.left_press_start = None
-        self.selected_images = []
         self.shift_pressed = False
         self.pointer_position = None
-        self.sprites = []
+        self.selected_images = []
+        self.selected_sprite = None
+
+        if data == None:
+            self.grid_step = grid_step
+            self.images = []
+            self.sprites = []
+            self.atlas_size = 512
+        else:
+            self.deserialize(data)
+
+    def unselect_sprite(self):
+        self.selected_sprite = None
+
+    def get_selected_sprite(self):
+        return self.selected_sprite
+
+    def set_selected_sprite(self, s):
+        self.selected_sprite = s
+
+    def get_atlas_size(self):
+        return self.atlas_size
 
     def get_sprites(self):
         return self.sprites
@@ -86,6 +107,13 @@ class State:
     def get_images(self):
         return self.images
 
+    def get_image_by_name(self, name):
+        img = None
+        for i in self.images:
+            if i.name == name:
+                img = i
+        return img
+
     def load_image(self, path):
         img = Image(path, os.path.basename(path))
         self.images.append(img)
@@ -94,7 +122,8 @@ class State:
 
     def get_settings_list(self):
         settings_lst = [TOSetting("int", 0, None, self.grid_step[0], "Grid x step, px: ", self.set_grid_x_s),
-                        TOSetting("int", 0, None, self.grid_step[1], "Grid y step, px: ", self.set_grid_y_s)]
+                        TOSetting("int", 0, None, self.grid_step[1], "Grid y step, px: ", self.set_grid_y_s),
+                        TOSetting("int", 0, None, self.atlas_size, "Atlas size, px: ", self.set_atlas_size_s)]
         return settings_lst
 
     def set_grid_x_s(self, setting):
@@ -103,10 +132,44 @@ class State:
     def set_grid_y_s(self, setting):
         self.grid_step[1] = setting.new_value
 
+    def set_atlas_size_s(self, setting):
+        self.atlas_size = setting.new_value
+
+    def export(self, path):
+        f = open(path+".json", "w")
+        f.write(json.dumps({"fomat": 1, "type": "tset", "atlas_size": self.atlas_size, "images": [i.export() for i in self.images], "sprites": [s.export() for s in self.sprites]}))
+        f.close()
+        
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.atlas_size*self.scale[0]), int(self.atlas_size*self.scale[1]))
+        cr = cairo.Context(cr_surf)
+
+        cr.set_source_rgba(0.0, 0.0, 0.0, 0.0)
+        cr.rectangle(0, 0, int(self.atlas_size*self.scale[0]), int(self.atlas_size*self.scale[1]))
+        cr.fill()
+
+        for i in self.images:
+            s = i.get_selected()
+
+            if s:
+                i.unselect()
+
+            i.draw(cr)
+
+            if s:
+                i.set_selected()
+
+        cr_surf.write_to_png(path+".png")
+
     def serialize(self):
-        return {"type": "state", "grid_step": self.grid_step}
+        return {"type": "state", "grid_step": self.grid_step, "atlas_size": self.atlas_size, "images": [i.serialize() for i in self.images], "sprites": [s.serialize() for s in self.sprites]}
 
     def deserialize(self, data):
         self.grid_step = data["grid_step"]
+        self.atlas_size = data["atlas_size"]
+        self.images = [Image(data=i) for i in data["images"]]
+        self.sprites = [Sprite(state=self, data=s) for s in data["sprites"]]
+    
+    def set(self, state):
+        self = state
 
 state = State()

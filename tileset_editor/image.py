@@ -3,12 +3,15 @@ import cairo
 import utils
 
 class Image:
-    def __init__(self, path, name):
-        self.path = path
-        self.name = name
-        self.cairo_img = cairo.ImageSurface.create_from_png(path)
-        self.dimensions = [self.cairo_img.get_width(), self.cairo_img.get_height()]
-        self.origin = [0,0]
+    def __init__(self, path=None, name=None, data=None):
+        if data == None:
+            self.path = path
+            self.name = name
+            self.cairo_img = cairo.ImageSurface.create_from_png(path)
+            self.dimensions = [self.cairo_img.get_width(), self.cairo_img.get_height()]
+            self.origin = [0,0]
+        else:
+            self.deserialize(data)
         self.aabb = utils.AABB(self.origin[0],self.origin[1],self.dimensions[0],self.dimensions[1])
         self.selected = False
 
@@ -24,9 +27,6 @@ class Image:
             cr.rectangle(0, 0, self.dimensions[0], self.dimensions[1])
             cr.stroke()
         cr.translate(-self.origin[0], -self.origin[1])
-
-    def export(self):
-        return {"name": self.name, "origin": self.origin, "dimensions": self.dimensions}
 
     def set_selected(self):
         self.selected = True
@@ -71,6 +71,10 @@ class Image:
         self.path = data["path"]
         self.cairo_img = cairo.ImageSurface.create_from_png(self.path)
         self.dimensions = [self.cairo_img.get_width(), self.cairo_img.get_height()]
+
+    def export(self):
+        return {"name": self.name, "origin": self.origin, "dimensions": self.dimensions}
+
 
     def __repr__(self):
         return "<Image %s>" % (self.name, )
