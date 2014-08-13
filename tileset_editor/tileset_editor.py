@@ -80,7 +80,6 @@ class Screen(gtk.DrawingArea):
         cr.set_source_rgb(0, 0, 0)
         cr.set_line_width(0.1)
         cr.translate(offset[0], offset[1])
-
         cr.scale(scale[0], scale[1])
         grid_step = state.get_grid_step()
         for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
