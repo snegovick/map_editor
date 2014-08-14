@@ -12,7 +12,11 @@ class Image:
             self.origin = [0,0]
         else:
             self.deserialize(data)
-        self.aabb = utils.AABB(self.origin[0],self.origin[1],self.dimensions[0],self.dimensions[1])
+
+        ex = self.origin[0]+self.dimensions[0]
+        ey = self.origin[1]+self.dimensions[1]
+
+        self.aabb = utils.AABB(self.origin[0], self.origin[1], ex, ey)
         self.selected = False
 
     def draw(self, cr):
@@ -46,7 +50,10 @@ class Image:
     def set_origin(self, origin):
         self.origin[0] = origin[0]
         self.origin[1] = origin[1]
-        self.aabb = utils.AABB(self.origin[0], self.origin[1], self.dimensions[0], self.dimensions[1])
+        ex = self.origin[0]+self.dimensions[0]
+        ey = self.origin[1]+self.dimensions[1]
+
+        self.aabb = utils.AABB(self.origin[0], self.origin[1], ex, ey)
 
     def get_origin(self):
         return self.origin
@@ -54,7 +61,10 @@ class Image:
     def move_origin(self, delta):
         self.origin[0] += delta[0]
         self.origin[1] += delta[1]
-        self.aabb = utils.AABB(self.origin[0], self.origin[1], self.dimensions[0], self.dimensions[1])
+        ex = self.origin[0]+self.dimensions[0]
+        ey = self.origin[1]+self.dimensions[1]
+        
+        self.aabb = utils.AABB(self.origin[0], self.origin[1], ex, ey)
 
     def set_name(self, name):
         self.name = name

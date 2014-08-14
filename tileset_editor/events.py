@@ -30,7 +30,6 @@ class EVEnum:
     sprite_image_up_click = "sprite_image_up_click"
     sprite_image_down_click = "sprite_image_down_click"
 
-
 class EventProcessor(object):
     event_list = []
     selected_elements = []
@@ -87,14 +86,12 @@ class EventProcessor(object):
         scale = state.get_scale()
         state.set_scale((scale[0]+0.1, scale[1]+0.1))
         self.mw.widget.update()
-        print "scale:", scale
 
     def scroll_down(self, args):
         scale = state.get_scale()
         if scale[0]>0.2:
             state.set_scale((scale[0]-0.1, scale[1]-0.1))
             self.mw.widget.update()
-        print "scale:", scale
 
     def shift_press(self, args):
         state.set_shift_pressed()
@@ -169,7 +166,6 @@ class EventProcessor(object):
         state.reset_left_press_start()
 
     def update_settings(self, args):
-        print "settings update:", args
         new_value = args[0][1][0].get_value()
         setting = args[0][0]
         setting.set_value(new_value)
@@ -203,10 +199,8 @@ class EventProcessor(object):
 
     def new_sprite_click(self, args):
         selected = state.get_selected_images()
-        print selected
         if selected != []:
             res, text = self.mw.mk_textbox_dialog("Enter sprite name:")
-            print "result:", res, text
             if res:
                 s = Sprite(selected, text)
                 state.add_sprite(s)
@@ -261,8 +255,6 @@ class EventProcessor(object):
             if s.name == name:
                 state.set_selected_sprite(s)
                 self.update_sprite_images_list(None)
-                print state.get_selected_sprite()
-                break
 
     def add_to_selected_sprite_click(self, args):
         sprite = state.get_selected_sprite()
@@ -277,16 +269,13 @@ class EventProcessor(object):
         if selection != []:
             name = selection[0].children()[0].children()[1].get_text()
             sprite = state.get_selected_sprite()
-            print "sprite:", sprite
             if sprite != None:
                 for i in sprite.get_images():
                     if i.name == name:
                         sprite.set_selected_image(i)
-                        break
 
     def sprite_image_remove_button_click(self, args):
         sprite = state.get_selected_sprite()
-        print sprite
         if sprite != None:
             sprite.remove_selected_image()
             self.update_sprite_images_list(None)
