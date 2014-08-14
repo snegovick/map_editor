@@ -136,15 +136,16 @@ class State:
         self.atlas_size = setting.new_value
 
     def export(self, path):
+        image_path = path+".png"
         f = open(path+".json", "w")
-        f.write(json.dumps({"fomat": 1, "type": "tset", "atlas_size": self.atlas_size, "images": [i.export() for i in self.images], "sprites": [s.export() for s in self.sprites]}))
+        f.write(json.dumps({"fomat": 1, "type": "tset", "image": image_path, "atlas_size": self.atlas_size, "images": [i.export() for i in self.images], "sprites": [s.export() for s in self.sprites]}))
         f.close()
         
-        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.atlas_size*self.scale[0]), int(self.atlas_size*self.scale[1]))
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.atlas_size), int(self.atlas_size))
         cr = cairo.Context(cr_surf)
 
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.0)
-        cr.rectangle(0, 0, int(self.atlas_size*self.scale[0]), int(self.atlas_size*self.scale[1]))
+        cr.rectangle(0, 0, int(self.atlas_size), int(self.atlas_size))
         cr.fill()
 
         for i in self.images:
@@ -158,7 +159,7 @@ class State:
             if s:
                 i.set_selected()
 
-        cr_surf.write_to_png(path+".png")
+        cr_surf.write_to_png(image_path)
 
     def serialize(self):
         return {"type": "state", "grid_step": self.grid_step, "atlas_size": self.atlas_size, "images": [i.serialize() for i in self.images], "sprites": [s.serialize() for s in self.sprites]}
