@@ -141,16 +141,16 @@ class State:
         return settings_lst
 
     def set_grid_x_s(self, setting):
-        self.grid_step[0] = setting.new_value
+        self.grid_step[0] = int(setting.new_value)
 
     def set_grid_y_s(self, setting):
-        self.grid_step[1] = setting.new_value
+        self.grid_step[1] = int(setting.new_value)
 
     def set_map_size_x_s(self, setting):
-        self.map_size[0] = setting.new_value
+        self.map_size[0] = int(setting.new_value)
 
     def set_map_size_y_s(self, setting):
-        self.map_size[1] = setting.new_value
+        self.map_size[1] = int(setting.new_value)
 
     def export(self, path):
         image_path = path+".png"
