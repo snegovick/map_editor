@@ -93,3 +93,6 @@ class Proxy:
         self.frame = data["frame"]
         if self.sprite == None:
             self.sprite = self.state.get_sprite_by_name(data["sprite_ref"])
+
+    def export(self):
+        return {"type": "object", "sprite_ref": self.sprite.name, "position": self.position, "animated": self.animated, "frame_time": self.frame_time, "frame": self.frame}

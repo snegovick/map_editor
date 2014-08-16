@@ -6,7 +6,7 @@ import cairo
 
 from image import Image
 from sprite import Sprite
-from layer import Layer
+from layer import Layer, LayerType
 
 class State:
     def __init__(self, grid_step=[32,32], map_size=[64, 64], data=None):
@@ -153,10 +153,42 @@ class State:
         self.map_size[1] = setting.new_value
 
     def export(self, path):
-        pass
+        image_path = path+".png"
+        
+        f = open(path+".json", "w")
+        sprites = {}
+        for s in self.sprites:
+            sprites[s.name] = s.export()
+        images = {}
+        for i in self.images:
+            images[i.name] = i.export()
+        f.write(json.dumps({"format": 1, "type": "map", "tileset_path": self.tileset_path, "layers": [l.export() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
+        f.close()
+
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.map_size[1]*self.grid_step[0]), int(self.map_size[1]*self.grid_step[1]))
+        cr = cairo.Context(cr_surf)
+
+        cr.set_source_rgba(0.0, 0.0, 0.0, 0.0)
+        cr.rectangle(0, 0, int(self.map_size[1]*self.grid_step[0]), int(self.map_size[1]*self.grid_step[1]))
+        cr.fill()
+
+        for l in self.layers:
+            if l.get_layer_type() == LayerType.sprite:
+                for p in self.get_proxys():
+                    selected = p.get_selected()
+                    if selected:
+                        p.unset_selected()
+                    
+                    p.draw(cr)
+
+                    if selected:
+                        p.set_selected()
+
+        cr_surf.write_to_png(image_path)
+
 
     def serialize(self):
-        return {"type": "state", "tileset_path": self.tileset_path, "layers": [l.serialize() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step}
+        return {"format": 1, "type": "state", "tileset_path": self.tileset_path, "layers": [l.serialize() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step}
 
     def deserialize(self, data):
         self.map_size = data["map_size"]

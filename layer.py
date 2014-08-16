@@ -141,6 +141,8 @@ class Layer:
                     cr.line_to(p2[0], p2[1])
                     cr.stroke()
 
+    def export(self):
+        return {"type": "layer", "name": self.name, "adjacency_dct": self.adjacency_dct, "objects": [p.serialize() for p in self.proxy_dct.values()]}
 
     def serialize(self):
         return {"type": "layer", "name": self.name, "layer_type": self.layer_type, "adjacency_dct": self.adjacency_dct, "proxys": [p.serialize() for p in self.proxy_dct.values()]}

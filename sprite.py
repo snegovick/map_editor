@@ -28,3 +28,6 @@ class Sprite:
 
     def get_animation_length(self):
         return len(self.images)
+
+    def export(self):
+        return {"type": "sprite", "name": self.name, "image_refs": [i.name for i in self.images]}

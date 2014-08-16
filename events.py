@@ -30,6 +30,7 @@ class EVEnum:
     layer_set_child_button_click = "layer_set_child_button_click"
     load_project_click = "load_project_click"
     save_project_click = "save_project_click"
+    export_click = "export_click"
 
 class EventProcessor(object):
     event_list = []
@@ -62,6 +63,7 @@ class EventProcessor(object):
             EVEnum.layer_set_child_button_click: self.layer_set_child_button_click,
             EVEnum.load_project_click: self.load_project_click,
             EVEnum.save_project_click: self.save_project_click,
+            EVEnum.export_click: self.export_click,
         }
 
     def reset(self):
@@ -351,7 +353,7 @@ class EventProcessor(object):
                     self.mw.widget.update()
 
     def load_project_click(self, args):
-        mimes = [("Map project (*.map_project)", "Application/mape", "*.map_project")]
+        mimes = [("Map project (*.map_project)", "Application/map_project", "*.map_project")]
         result = self.mw.mk_file_dialog("Load project ...", mimes)
         if result!=None:
             project.load(result)
@@ -361,10 +363,17 @@ class EventProcessor(object):
             self.mw.widget.update()
 
     def save_project_click(self, args):
-        mimes = [("Map project (*.map_project)", "Application/mape", "*.map_project")]
+        mimes = [("Map project (*.map_project)", "Application/map_project", "*.map_project")]
         result = self.mw.mk_file_save_dialog("Save project ...", mimes)
         if result!=None:
             project.save(result)
+
+    def export_click(self, args):
+        mimes = [("Map files (*)", "", "*")]
+        result = self.mw.mk_file_save_dialog("Save map files ...", mimes)
+        if result!=None:
+            state.export(result)
+
 
 
         

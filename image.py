@@ -19,3 +19,6 @@ class Image:
     def draw(self, cr, alpha):
         cr.set_source_surface(self.surf, 0, 0)
         cr.paint_with_alpha(alpha)
+
+    def export(self):
+        return {"type": "image", "dimensions": self.dimensions, "origin": self.origin, "name": self.name}
