@@ -8,19 +8,22 @@ class LayerType:
     sprite="sprite"
 
 class Layer:
-    def __init__(self, name=None, layer_type=LayerType.meta):
-        self.layer_type = layer_type
+    def __init__(self, name=None, layer_type=LayerType.meta, state=None, data=None):
         self.proxy_dct = {}
         self.last_id = 0
-        self.name = name
         self.selected_proxys = []
         self.selected_lo = None
         self.ignore_next_selection_change = False
+        self.state = state
+
+        self.adjacency_dct = {}
+
+        if data == None:
+            self.layer_type = layer_type
+            self.name = name
+        else:
+            self.deserialize(data)
         
-        if layer_type == LayerType.meta:
-            self.current_parent_object = None
-            self.adjacency_dct = {}
-            self.wait_child = False
 
     def get_ignore_next_selection_change(self):
         return self.ignore_next_selection_change
@@ -109,6 +112,11 @@ class Layer:
             del self.proxy_dct[name]
 
     def draw(self, cr, alpha):
+        print "proxy_dct:", self.proxy_dct
+        for p in self.proxy_dct.values():
+            p.draw(cr, alpha)
+
+
         cr.set_source_rgba(0, 0, 0, alpha)
         cr.set_line_width(1)
 
@@ -133,7 +141,26 @@ class Layer:
                     cr.line_to(p2[0], p2[1])
                     cr.stroke()
 
-        for p in self.proxy_dct.values():
-            p.draw(cr, alpha)
 
-    
+    def serialize(self):
+        return {"type": "layer", "name": self.name, "layer_type": self.layer_type, "adjacency_dct": self.adjacency_dct, "proxys": [p.serialize() for p in self.proxy_dct.values()]}
+
+    def deserialize(self, data):
+        from state import state
+        self.name = data["name"]
+        self.layer_type = data["layer_type"]
+        self.adjacency_dct = {}
+        for k, v in data["adjacency_dct"].iteritems():
+            self.adjacency_dct[int(k)] = v
+        
+        for p in data["proxys"]:
+            if self.layer_type == LayerType.meta:
+                m = Meta("", state.get_grid_step())
+                proxy = Proxy(sprite=m, state=state, data=p)
+                m.name= str(proxy.id)
+                m.update_text()
+            else:
+                proxy = Proxy(state=state, data=p)
+            self.proxy_dct[proxy.id] = proxy
+                
+        self.last_id = proxy.id+1

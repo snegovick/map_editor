@@ -20,14 +20,19 @@ class State:
 
         if data == None:
             self.atlas = None
+            self.tileset_path = None
             self.grid_step = grid_step
             self.sprites = []
             self.images = []
             self.layers = []
-            self.metas = []
             self.map_size = map_size
         else:
             self.deserialize(data)
+
+    def get_sprite_by_name(self, n):
+        for s in self.sprites:
+            if s.name == n:
+                return s
 
     def get_active_layer(self):
         return self.active_layer
@@ -119,6 +124,7 @@ class State:
             print "Unknown data format:", data["format"]
 
     def load_tileset(self, path):
+        self.tileset_path = path
         f = open(path, "r")
         data = f.read()
         f.close()
@@ -150,10 +156,14 @@ class State:
         pass
 
     def serialize(self):
-        pass
+        return {"type": "state", "tileset_path": self.tileset_path, "layers": [l.serialize() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step}
 
     def deserialize(self, data):
-        pass
+        self.map_size = data["map_size"]
+        self.grid_step = data["grid_step"]
+        if data["tileset_path"] != None:
+            self.load_tileset(data["tileset_path"])
+        self.layers = [Layer(state=self, data=l) for l in data["layers"]]
     
     def set(self, state):
         self = state

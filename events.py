@@ -28,6 +28,8 @@ class EVEnum:
     general_selection_changed = "general_selection_changed"
     layer_object_add_meta_button_click = "layer_object_add_meta_button_click"
     layer_set_child_button_click = "layer_set_child_button_click"
+    load_project_click = "load_project_click"
+    save_project_click = "save_project_click"
 
 class EventProcessor(object):
     event_list = []
@@ -58,6 +60,8 @@ class EventProcessor(object):
             EVEnum.general_selection_changed: self.general_selection_changed,
             EVEnum.layer_object_add_meta_button_click: self.layer_object_add_meta_button_click,
             EVEnum.layer_set_child_button_click: self.layer_set_child_button_click,
+            EVEnum.load_project_click: self.load_project_click,
+            EVEnum.save_project_click: self.save_project_click,
         }
 
     def reset(self):
@@ -324,9 +328,6 @@ class EventProcessor(object):
                     layer.unselect_all_proxys()
                 layer.add_proxy_to_selected(args)
                 layer.set_ignore_next_selection_change()
-                #layer.set_selected_layer_object(args)
-                # if layer.get_layer_type() == LayerType.meta:
-                #     self.mw.layer_set_child_button.set_sensitive(True)
             else:
                 if layer.get_ignore_next_selection_change():
                     layer.unset_ignore_next_selection_change()
@@ -348,6 +349,23 @@ class EventProcessor(object):
                 if layer.get_layer_type() == LayerType.meta:
                     layer.link_proxys()
                     self.mw.widget.update()
+
+    def load_project_click(self, args):
+        mimes = [("Map project (*.map_project)", "Application/mape", "*.map_project")]
+        result = self.mw.mk_file_dialog("Load project ...", mimes)
+        if result!=None:
+            project.load(result)
+            self.update_layer_objects_list(None)
+            self.update_sprites_list(None)
+            self.update_layers_list(None)
+            self.mw.widget.update()
+
+    def save_project_click(self, args):
+        mimes = [("Map project (*.map_project)", "Application/mape", "*.map_project")]
+        result = self.mw.mk_file_save_dialog("Save project ...", mimes)
+        if result!=None:
+            project.save(result)
+
 
         
 ep = EventProcessor()

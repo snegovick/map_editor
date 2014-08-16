@@ -4,16 +4,23 @@ from tileset_editor.generalized_settings import *
 import time
 
 class Proxy:
-    def __init__(self, sprite=None, position=None, data=None):
+    def __init__(self, sprite=None, position=None, state=None, data=None):
         self.animation_timer = time.time()
         self.animation_frame = 0
         self.is_selected = False
+        self.name = None
+        self.id = None
+        self.state = state
+        self.sprite = sprite
         if data == None:
             self.position = position
-            self.sprite = sprite
+
             self.frame = 0
             self.animated = False
             self.frame_time = 10
+        else:
+            self.deserialize(data)
+
         self.dimensions = self.sprite.get_dimensions()
         ex = self.position[0]+self.dimensions[0]
         ey = self.position[1]+self.dimensions[1]
@@ -73,3 +80,16 @@ class Proxy:
             cr.rectangle(0, 0, self.dimensions[0], self.dimensions[1])
             cr.stroke()
         cr.translate(-self.position[0], -self.position[1])
+
+    def serialize(self):
+        return {"type": "proxy", "name": self.name, "id": self.id, "sprite_ref": self.sprite.name, "position": self.position, "animated": self.animated, "frame_time": self.frame_time, "frame": self.frame}
+
+    def deserialize(self, data):
+        self.name = data["name"]
+        self.id = data["id"]
+        self.position = data["position"]
+        self.animated = data["animated"]
+        self.frame_time = data["frame_time"]
+        self.frame = data["frame"]
+        if self.sprite == None:
+            self.sprite = self.state.get_sprite_by_name(data["sprite_ref"])

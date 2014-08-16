@@ -8,10 +8,19 @@ class Meta:
         cr.set_source_rgb(0.1, 0.1, 0.1)
         f_size = 13
         cr.set_font_size(f_size);
-        self.text = text
-        (x, y, width, height, dx, dy) = cr.text_extents(self.text)
+        self.name = text
+        (x, y, width, height, dx, dy) = cr.text_extents(self.name)
         cr.move_to(dimensions[0]/2-width/2, dimensions[1]/2)
-        cr.show_text(text)
+        cr.show_text(self.name)
+
+    def update_text(self):
+        cr = cairo.Context(self.surf)
+        cr.set_source_rgb(0.1, 0.1, 0.1)
+        f_size = 13
+        cr.set_font_size(f_size);
+        (x, y, width, height, dx, dy) = cr.text_extents(self.name)
+        cr.move_to(self.dimensions[0]/2-width/2, self.dimensions[1]/2+height/2)
+        cr.show_text(self.name)
 
     def get_animation_length(self):
         return 1
