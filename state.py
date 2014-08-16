@@ -9,14 +9,13 @@ from sprite import Sprite
 from layer import Layer
 
 class State:
-    def __init__(self, grid_step=[8,8], map_size=[64, 64], data=None):
+    def __init__(self, grid_step=[32,32], map_size=[64, 64], data=None):
         self.scale = [1, 1]
         self.left_press_start = None
         self.shift_pressed = False
         self.pointer_position = None
-        self.selected_sprite = None
         self.offset = [0, 0]
-        self.put_sprite = None
+        self.put_lo = False
         self.active_layer = None
 
         if data == None:
@@ -42,23 +41,14 @@ class State:
     def add_layer(self, name, layer_type):
         self.layers.append(Layer(name, layer_type))
 
-    def unselect_sprite(self):
-        self.selected_sprite = None
+    def set_put_layer_object(self):
+        self.put_lo = True
 
-    def set_selected_sprite(self, s):
-        self.selected_sprite = s
+    def unset_put_layer_object(self):
+        self.put_lo = False
 
-    def get_selected_sprite(self):
-        return self.selected_sprite
-
-    def set_put_sprite(self):
-        self.put_sprite = True
-
-    def unset_put_sprite(self):
-        self.put_sprite = False
-
-    def get_put_sprite(self):
-        return self.put_sprite
+    def get_put_layer_object(self):
+        return self.put_lo
 
     def get_shift_pressed(self):
         return self.shift_pressed

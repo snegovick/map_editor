@@ -16,9 +16,6 @@ class Image:
     def get_dimensions(self):
         return self.dimensions
 
-    def draw_at(self, position):
-        pass
-
-    def draw(self, cr):
+    def draw(self, cr, alpha):
         cr.set_source_surface(self.surf, 0, 0)
-        cr.paint_with_alpha(1.0)
+        cr.paint_with_alpha(alpha)

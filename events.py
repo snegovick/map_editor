@@ -26,6 +26,8 @@ class EVEnum:
     layers_selection_changed = "layers_selection_changed"
     layer_objects_selection_changed = "layer_objects_selection_changed"
     general_selection_changed = "general_selection_changed"
+    layer_object_add_meta_button_click = "layer_object_add_meta_button_click"
+    layer_set_child_button_click = "layer_set_child_button_click"
 
 class EventProcessor(object):
     event_list = []
@@ -54,6 +56,8 @@ class EventProcessor(object):
             EVEnum.layers_selection_changed: self.layers_selection_changed,
             EVEnum.layer_objects_selection_changed: self.layer_objects_selection_changed,
             EVEnum.general_selection_changed: self.general_selection_changed,
+            EVEnum.layer_object_add_meta_button_click: self.layer_object_add_meta_button_click,
+            EVEnum.layer_set_child_button_click: self.layer_set_child_button_click,
         }
 
     def reset(self):
@@ -101,7 +105,7 @@ class EventProcessor(object):
 
         layer = state.get_active_layer()
         if layer != None:
-            if state.get_put_sprite():
+            if state.get_put_layer_object():
                 self.mw.widget.update()
 
             if state.get_left_press_start() != None:
@@ -110,6 +114,8 @@ class EventProcessor(object):
                 proxys = layer.get_selected_proxys()
 
                 for p in proxys:
+                    if not p in self.relative_coords:
+                        self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
                     nx = cx + self.relative_coords[p][0]
                     ny = cy + self.relative_coords[p][1]
                     p.set_position((int(nx/grid_step[0])*grid_step[0], int(ny/grid_step[1])*grid_step[1]))
@@ -119,6 +125,33 @@ class EventProcessor(object):
         pointer_position = [nx, ny]
         state.set_pointer_position(pointer_position)
         self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
+    
+    def general_unselect_all_elements(self, args):
+        lst = args["lst"]
+        for e in lst.children():
+            lst.unselect_child(e)
+
+
+    def general_unselect_element(self, args):
+        lst = args["lst"]
+        name = args["name"]
+        for e in lst.children():
+            hb = e.children()[0]
+            if hb.children()[1].get_text() == name:
+                lst.unselect_child(e)
+                break
+
+    def general_set_selected_element(self, args):
+        lst = args["lst"]
+        element_name = args["name"]
+        element = args["element"]
+        for e in lst.children():
+            hb = e.children()[0]
+            if hb.children()[1].get_text() == element_name:
+                lst.select_child(e)
+                #self.layer_objects_selection_changed(element)
+            # else:
+            #     lst.unselect_child(e)
 
     def screen_left_press(self, args):
         offset = state.get_offset()
@@ -126,25 +159,30 @@ class EventProcessor(object):
         cx = (args[0][0]-offset[0])/scale[0]
         cy = (args[0][1]-offset[1])/scale[1]
         state.set_left_press_start((cx, cy))
-
+        grid_step = state.get_grid_step()
         layer = state.get_active_layer()
         if layer != None:
-            if state.get_put_sprite():
-                state.unset_put_sprite()
-                p = Proxy(state.get_selected_sprite(), [cx, cy])
-                layer.add_proxy(p)
+            if state.get_put_layer_object():
+                state.unset_put_layer_object()
+                nx = int(cx/grid_step[0])*grid_step[0]
+                ny = int(cy/grid_step[1])*grid_step[1]
+                pt = [nx, ny]
+                layer.add_proxy(pt)
                 self.update_layer_objects_list(None)
                 
-
             proxy_lst = layer.get_proxy_lst()
 
             if state.get_shift_pressed():
                 for p in proxy_lst:
                     if p.point_in_aabb([cx, cy]):
-                        if not layer.get_selected():
+                        if not p.get_selected():
+                            self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": p.name, "element": p})
                             layer.add_proxy_to_selected(p)
+                            layer.set_ignore_next_selection_change()
                         else:
-                            del self.relative_coords[p]
+                            if p in self.relative_coords:
+                                del self.relative_coords[p]
+                            self.general_unselect_element({"lst": self.mw.lo_gtklist, "name": p.name})
                             layer.remove_proxy_from_selected(p)
             else:
                 selected = None
@@ -153,16 +191,23 @@ class EventProcessor(object):
                         selected = p
                 if selected != None:
                     if selected.get_selected():
-                        layer.unselect_all_proxys()
                         self.relative_coords = {}
+                        self.general_unselect_all_elements({"lst": self.mw.lo_gtklist})
+                        print "click"
+                        layer.unselect_all_proxys()
                     else:
-                        layer.unselect_all_proxys()
                         self.relative_coords = {}
-                        layer.add_proxy_to_selected(selected)
-                    
+                        self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": selected.name, "element": selected})
+                        layer.add_proxy_to_selected(p)
+                        layer.set_ignore_next_selection_change()
+
             self.mw.widget.update()
 
             selected_proxys = layer.get_selected_proxys()
+            if len(selected_proxys) == 2:
+                if layer.get_layer_type() == LayerType.meta:
+                    self.mw.layer_set_child_button.set_sensitive(True)
+
             self.relative_coords = {}
             for p in selected_proxys:
                 self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
@@ -183,7 +228,6 @@ class EventProcessor(object):
         self.mw.widget.update()
 
     def general_selection_changed(self, args):
-        print args
         lst = args[0]["lst"][0]
         cb = args[0]["callback"]
         enumerable = args[0]["enumerable"]
@@ -194,6 +238,7 @@ class EventProcessor(object):
                 if e.name == name:
                     cb(e)
                     break
+        cb(None)
 
     def update_sprites_list(self, args):
         sprites = state.get_sprites()
@@ -214,15 +259,23 @@ class EventProcessor(object):
 
     def sprites_selection_changed(self, args):
         selection = args[0][0].get_selection()
-        state.unselect_sprite()
-        name = selection[0].children()[0].children()[1].get_text()
-        for s in state.get_sprites():
-            if s.name == name:
-                state.set_selected_sprite(s)
-                break
+        if len(selection)>0:
+            layer = state.get_active_layer()
+            if layer == None:
+                args[0][0].unselect_child(selection[0])
+                return
+            if layer.get_layer_type() == LayerType.meta:
+                args[0][0].unselect_child(selection[0])
+                return
+            layer.unselect_layer_object()
+            name = selection[0].children()[0].children()[1].get_text()
+            for s in state.get_sprites():
+                if s.name == name:
+                    layer.set_selected_layer_object(s)
+                    break
 
     def sprite_put_button_click(self, args):
-        state.set_put_sprite()
+        state.set_put_layer_object()
 
     def update_layers_list(self, args):
         layers = state.get_layers()
@@ -236,7 +289,7 @@ class EventProcessor(object):
         ok, name, meta = self.mw.mk_addlayer_dialog("Enter the name for new layer:")
         if ok:
             l_type = (LayerType.meta if meta else LayerType.sprite)
-            state.add_layer(name, meta)
+            state.add_layer(name, l_type)
             self.update_layers_list(None)
 
     def update_layer_objects_list(self, args):
@@ -249,14 +302,52 @@ class EventProcessor(object):
                     self.mw.add_item_to_list(self.mw.lo_gtklist, p.name, None)
 
     def layers_selection_changed(self, args):
-        state.set_active_layer(args)
-        self.update_layer_objects_list(None)
-        self.mw.widget.update()
-
+        if args!=None:
+            state.set_active_layer(args)
+            if args.get_layer_type() == LayerType.meta:
+                self.mw.layer_object_add_button.set_sensitive(True)
+                self.mw.sprite_put_button.set_sensitive(False)
+            else:
+                self.mw.layer_object_add_button.set_sensitive(False)
+                self.mw.sprite_put_button.set_sensitive(True)
+                self.mw.layer_set_child_button.set_sensitive(False)
+            self.update_layer_objects_list(None)
+            self.mw.widget.update()
 
     def layer_objects_selection_changed(self, args):
-        print args
-        self.mw.new_settings_vbox(args.get_settings_list(), "Object "+args.name+" settings")
-        
+        layer = state.get_active_layer()
+        if layer != None:
+            if args != None:
+                self.mw.new_settings_vbox(args.get_settings_list(), "Object "+args.name+" settings")
+                
+                if not state.get_shift_pressed():
+                    layer.unselect_all_proxys()
+                layer.add_proxy_to_selected(args)
+                layer.set_ignore_next_selection_change()
+                #layer.set_selected_layer_object(args)
+                # if layer.get_layer_type() == LayerType.meta:
+                #     self.mw.layer_set_child_button.set_sensitive(True)
+            else:
+                if layer.get_ignore_next_selection_change():
+                    layer.unset_ignore_next_selection_change()
+                    return
+                layer.unselect_all_proxys()
+        self.mw.widget.update()
 
+    def layer_object_add_meta_button_click(self, args):
+        layer = state.get_active_layer()
+        if layer != None:
+            layer.set_selected_layer_object(layer.get_new_meta())
+        state.set_put_layer_object()
+
+    def layer_set_child_button_click(self, args):
+        layer = state.get_active_layer()
+        if layer != None:
+            selected_proxys = layer.get_selected_proxys()
+            if len(selected_proxys) == 2:
+                if layer.get_layer_type() == LayerType.meta:
+                    layer.link_proxys()
+                    self.mw.widget.update()
+
+        
 ep = EventProcessor()

@@ -73,7 +73,6 @@ class MainWindow(object):
 
         self.cursor_pos_label = gtk.Label("")
         self.widget_vbox.pack_start(self.cursor_pos_label, expand=False, fill=False)
-
         self.__mk_right_vbox()
         self.hbox.pack_start(self.right_vbox, expand=False, fill=False, padding=0)
         gobject.timeout_add(30, self.widget.periodic)
@@ -92,7 +91,6 @@ class MainWindow(object):
         l = gtk.Label(label)
         self.settings_vb.pack_start(l, expand=False, fill=False, padding=0)
         l.show()
-        print settings_lst
         for s in settings_lst:
             dct = {}
             if s.type == "int":
@@ -286,7 +284,6 @@ class MainWindow(object):
 
         settings_lst = state.get_settings_list()
         if settings_lst != None:
-            print settings_lst
             for s in settings_lst:
                 dct = {}
                 if s.type == "int":
@@ -310,10 +307,12 @@ class MainWindow(object):
 
         self.layer_object_add_button = gtk.Button("Add meta")
         self.layer_object_add_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_object_add_meta_button_click, None))
+        self.layer_object_add_button.set_sensitive(False)
         self.right_vbox.pack_start(self.layer_object_add_button, expand=False, fill=False, padding=0)
 
         self.layer_set_child_button = gtk.Button("Set child")
         self.layer_set_child_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_set_child_button_click, None))
+        self.layer_set_child_button.set_sensitive(False)
         self.right_vbox.pack_start(self.layer_set_child_button, expand=False, fill=False, padding=0)
 
         self.layer_delete_object_button = gtk.Button("Delete object")
@@ -335,6 +334,7 @@ class MainWindow(object):
 
         self.sprite_put_button = gtk.Button("Put sprite")
         self.sprite_put_button.connect("clicked", lambda *args: ep.push_event(EVEnum.sprite_put_button_click, None))
+        self.sprite_put_button.set_sensitive(False)
         self.left_vbox.pack_start(self.sprite_put_button, expand=False, fill=False, padding=0)
 
         self.layer_label = gtk.Label("Layers")

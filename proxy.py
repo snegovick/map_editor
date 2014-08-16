@@ -14,7 +14,7 @@ class Proxy:
             self.frame = 0
             self.animated = False
             self.frame_time = 10
-        self.dimensions = self.sprite.get_images()[0].get_dimensions()
+        self.dimensions = self.sprite.get_dimensions()
         ex = self.position[0]+self.dimensions[0]
         ey = self.position[1]+self.dimensions[1]
         self.aabb = utils.AABB(self.position[0], self.position[1], ex, ey)
@@ -57,17 +57,17 @@ class Proxy:
     def set_frame_time_s(self, setting):
         self.frame_time = int(setting.new_value)
 
-    def draw(self, cr):
+    def draw(self, cr, alpha):
         cr.translate(self.position[0], self.position[1])
         if self.animated:
             if (time.time()-self.animation_timer > self.frame_time):
                 self.animation_frame = (self.animation_frame + 1) % self.sprite.get_animation_length()
                 self.animation_timer = time.time()
-            self.sprite.draw_frame(cr, self.animation_frame)
+            self.sprite.draw_frame(cr, self.animation_frame, alpha)
         else:
-            self.sprite.draw_frame(cr, self.frame)
+            self.sprite.draw_frame(cr, self.frame, alpha)
 
-        cr.set_source_rgba(1, 0, 0, 1)
+        cr.set_source_rgba(1, 0, 0, alpha)
         cr.set_line_width(1)
         if self.is_selected:
             cr.rectangle(0, 0, self.dimensions[0], self.dimensions[1])

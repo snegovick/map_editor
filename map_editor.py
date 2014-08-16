@@ -78,29 +78,34 @@ class Screen(gtk.DrawingArea):
         cr.rectangle(0, 0, int(size[0]*scale[0]), int(size[1]*scale[1]))
         cr.fill()
 
-        layer = state.get_active_layer()
+        layers = state.get_layers()
         pointer = state.get_pointer_position()
         
-        if layer == None:
+        if len(layers) == 0:
             cr.set_source_rgb(0.1, 0.1, 0.1)
             f_size = 13
-            cr.set_font_size(f_size);
+            cr.set_font_size(f_size)
             text = "There is no layer yet, add one please"
             (x, y, width, height, dx, dy) = cr.text_extents(text)
-            cr.move_to(self.allocation.width/2-width/2, self.allocation.height/2);
+            cr.move_to(self.allocation.width/2-width/2, self.allocation.height/2)
             cr.show_text(text);  
         else:
-            if state.get_put_sprite():
-                sprite = state.get_selected_sprite()
+            layer = state.get_active_layer()
+            if state.get_put_layer_object():
+                lo = layer.get_selected_layer_object()
                 cr.translate(offset[0]+pointer[0], offset[1]+pointer[1])
                 cr.scale(scale[0], scale[1])
-                sprite.draw_frame(cr, 0)
+                lo.draw_preview(cr)
                 cr.identity_matrix()
 
-            cr.translate(offset[0], offset[1])
-            cr.scale(scale[0], scale[1])
-            layer.draw(cr)
-            cr.identity_matrix()
+            for l in layers:
+                cr.translate(offset[0], offset[1])
+                cr.scale(scale[0], scale[1])
+                if l == layer:
+                    l.draw(cr, 1.0)
+                else:
+                    l.draw(cr, 0.8)
+                cr.identity_matrix()
 
 
             cr.set_source_rgb(0, 0, 0)
