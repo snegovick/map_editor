@@ -95,11 +95,12 @@ class MainWindow(object):
         print settings_lst
         for s in settings_lst:
             dct = {}
-            if s.type == "float":
+            if s.type == "int":
                 w = self.__mk_labeled_spin(dct, s.display_name, s, None, s.default, s.min, s.max)
                 self.settings_vb.pack_start(w, expand=False, fill=False, padding=0)
-            if s.type == "bool":
-                w = self.__mk_labeled_checkbox(dct, s.display_name, )
+            elif s.type == "bool":
+                w = self.__mk_labeled_checkbox(dct, s.display_name, s, s.default)
+                self.settings_vb.pack_start(w, expand=False, fill=False, padding=0)
 
     def mk_question_dialog(self, question):
         md = gtk.Dialog(title=question, parent=self.window, flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
@@ -258,7 +259,7 @@ class MainWindow(object):
         label = gtk.Label(mlabel)
         label.show()
         dct["label"] = label
-        spin = gtk.SpinButton(adjustment=gtk.Adjustment(value=value, lower=lower, upper=upper, step_incr=step_incr, page_incr=page_incr, page_size=0), climb_rate=0.01, digits=3)
+        spin = gtk.SpinButton(adjustment=gtk.Adjustment(value=value, lower=lower, upper=upper, step_incr=step_incr, page_incr=page_incr, page_size=0), climb_rate=0.01, digits=0)
         spin.connect("value-changed", lambda *args: ep.push_event(EVEnum.update_settings, (data, args)))
         spin.show()
         dct["spin"] = spin
@@ -270,7 +271,7 @@ class MainWindow(object):
         hbox = gtk.HBox(homogeneous=False, spacing=0)
         hbox.show()
         dct["hbox"] = hbox
-        check = gtk.CheckButton("mlabel")
+        check = gtk.CheckButton(mlabel)
         check.connect("clicked", lambda *args: ep.push_event(EVEnum.update_settings, (data, check.get_acrive())))
         check.show()
         dct["check"] = check
@@ -299,6 +300,27 @@ class MainWindow(object):
         self.settings_vb = gtk.VBox(homogeneous=False, spacing=0)
         self.right_vbox.pack_start(self.settings_vb, expand=False, fill=False, padding=0)
 
+        self.layer_objects_label = gtk.Label("Layer objects")
+        self.lo_scrolled_window = gtk.ScrolledWindow()
+        self.lo_gtklist = gtk.List()
+        self.lo_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.general_selection_changed, {"lst": args, "callback": ep.layer_objects_selection_changed, "enumerable": state.get_active_layer().get_proxy_lst()}))
+        self.lo_scrolled_window.add_with_viewport(self.lo_gtklist)
+        self.right_vbox.pack_start(self.layer_objects_label, expand=False, fill=False, padding=0)
+        self.right_vbox.pack_start(self.lo_scrolled_window, expand=True, fill=True, padding=0)
+
+        self.layer_object_add_button = gtk.Button("Add meta")
+        self.layer_object_add_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_object_add_meta_button_click, None))
+        self.right_vbox.pack_start(self.layer_object_add_button, expand=False, fill=False, padding=0)
+
+        self.layer_set_child_button = gtk.Button("Set child")
+        self.layer_set_child_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_set_child_button_click, None))
+        self.right_vbox.pack_start(self.layer_set_child_button, expand=False, fill=False, padding=0)
+
+        self.layer_delete_object_button = gtk.Button("Delete object")
+        self.layer_delete_object_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_delete_object_button_click, None))
+        self.right_vbox.pack_start(self.layer_delete_object_button, expand=False, fill=False, padding=0)
+
+
     def __mk_left_vbox(self):
         self.left_vbox = gtk.VBox(homogeneous=False, spacing=0)
 
@@ -318,7 +340,7 @@ class MainWindow(object):
         self.layer_label = gtk.Label("Layers")
         self.l_scrolled_window = gtk.ScrolledWindow()
         self.l_gtklist = gtk.List()
-        self.l_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.layers_selection_changed, args))
+        self.l_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.general_selection_changed, {"lst":args, "callback": ep.layers_selection_changed, "enumerable": state.get_layers()}))
         self.l_scrolled_window.add_with_viewport(self.l_gtklist)
         self.left_vbox.pack_start(self.layer_label, expand=False, fill=False, padding=0)
         self.left_vbox.pack_start(self.l_scrolled_window, expand=True, fill=True, padding=0)

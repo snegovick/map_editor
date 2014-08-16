@@ -24,6 +24,8 @@ class EVEnum:
     sprites_selection_changed = "sprites_selection_changed"
     layer_add_button_click = "layer_add_button_click"
     layers_selection_changed = "layers_selection_changed"
+    layer_objects_selection_changed = "layer_objects_selection_changed"
+    general_selection_changed = "general_selection_changed"
 
 class EventProcessor(object):
     event_list = []
@@ -50,6 +52,8 @@ class EventProcessor(object):
             EVEnum.sprites_selection_changed: self.sprites_selection_changed,
             EVEnum.layer_add_button_click: self.layer_add_button_click,
             EVEnum.layers_selection_changed: self.layers_selection_changed,
+            EVEnum.layer_objects_selection_changed: self.layer_objects_selection_changed,
+            EVEnum.general_selection_changed: self.general_selection_changed,
         }
 
     def reset(self):
@@ -129,6 +133,7 @@ class EventProcessor(object):
                 state.unset_put_sprite()
                 p = Proxy(state.get_selected_sprite(), [cx, cy])
                 layer.add_proxy(p)
+                self.update_layer_objects_list(None)
                 
 
             proxy_lst = layer.get_proxy_lst()
@@ -177,6 +182,19 @@ class EventProcessor(object):
         project.push_state(state)
         self.mw.widget.update()
 
+    def general_selection_changed(self, args):
+        print args
+        lst = args[0]["lst"][0]
+        cb = args[0]["callback"]
+        enumerable = args[0]["enumerable"]
+        selection = lst.get_selection()
+        if len(selection)>0:
+            name = selection[0].children()[0].children()[1].get_text()
+            for e in enumerable:
+                if e.name == name:
+                    cb(e)
+                    break
+
     def update_sprites_list(self, args):
         sprites = state.get_sprites()
         if sprites != None:
@@ -221,14 +239,24 @@ class EventProcessor(object):
             state.add_layer(name, meta)
             self.update_layers_list(None)
 
+    def update_layer_objects_list(self, args):
+        layer = state.get_active_layer()
+        if layer!=None:
+            proxys = layer.get_proxy_lst()
+            if proxys != None:
+                self.mw.clear_list(self.mw.lo_gtklist)
+                for p in proxys:
+                    self.mw.add_item_to_list(self.mw.lo_gtklist, p.name, None)
+
     def layers_selection_changed(self, args):
-        selection = args[0][0].get_selection()
-        name = selection[0].children()[0].children()[1].get_text()
-        for l in state.get_layers():
-            if l.name == name:
-                print "active layer:", l.name
-                state.set_active_layer(l)
-                self.mw.widget.update()
-                break
+        state.set_active_layer(args)
+        self.update_layer_objects_list(None)
+        self.mw.widget.update()
+
+
+    def layer_objects_selection_changed(self, args):
+        print args
+        self.mw.new_settings_vbox(args.get_settings_list(), "Object "+args.name+" settings")
+        
 
 ep = EventProcessor()

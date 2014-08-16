@@ -1,4 +1,5 @@
 from tileset_editor import utils
+from tileset_editor.generalized_settings import *
 
 import time
 
@@ -41,20 +42,20 @@ class Proxy:
         self.aabb = utils.AABB(self.position[0], self.position[1], ex, ey)
 
     def get_settings_list(self):
-        settings_lst = [TOSetting("int", 0, None, self.frame, "Frame number: ", self.set_frame_s),
+        settings_lst = [TOSetting("int", 0, self.sprite.get_animation_length()-1, self.frame, "Frame number: ", self.set_frame_s),
                         TOSetting("bool", 0, None, self.animated, "Play animation", self.set_animated_s),
                         TOSetting("int", 0, None, self.frame_time, "Frame time, ms: ", self.set_frame_time_s)
                         ]
         return settings_lst        
 
     def set_frame_s(self, setting):
-        self.frame = setting.new_value
+        self.frame = int(setting.new_value)
 
     def set_animated_s(self, setting):
-        self.animated = setting.new_value
+        self.animated = int(setting.new_value)
 
     def set_frame_time_s(self, setting):
-        self.frame_time = setting.new_value
+        self.frame_time = int(setting.new_value)
 
     def draw(self, cr):
         cr.translate(self.position[0], self.position[1])

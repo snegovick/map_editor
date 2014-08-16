@@ -17,3 +17,6 @@ class Sprite:
 
     def get_images(self):
         return self.images
+
+    def get_animation_length(self):
+        return len(self.images)

@@ -27,16 +27,16 @@ class Layer:
         return self.name
 
     def add_proxy(self, proxy):
-        proxy.id = self.last_id
+        proxy.name = str(self.last_id)
         self.proxy_dct[self.last_id] = proxy
         self.last_id += 1
 
     def get_proxy_lst(self):
         return self.proxy_dct.values()        
 
-    def remove_proxy_by_id(self, pid):
-        if pid in self.proxy_list:
-            del self.proxy_dct[pid]
+    def remove_proxy_by_id(self, name):
+        if name in self.proxy_list:
+            del self.proxy_dct[name]
 
     def draw(self, cr):
         for p in self.proxy_dct.values():
