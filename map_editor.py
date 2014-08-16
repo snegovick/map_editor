@@ -66,7 +66,8 @@ class Screen(gtk.DrawingArea):
 
         cr_gdk = self.window.cairo_create()
         surface = cr_gdk.get_target()
-        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(state.atlas_size*scale[0]), int(state.atlas_size*scale[1]))
+        size = state.get_map_size_px()
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(size[0]*scale[0]), int(size[1]*scale[1]))
         cr = cairo.Context(cr_surf)
         
         # Restrict Cairo to the exposed area; avoid extra work
@@ -74,31 +75,56 @@ class Screen(gtk.DrawingArea):
         cr.clip()
 
         cr.set_source_rgb(1.0, 1.0, 1.0)
-        cr.rectangle(0, 0, int(state.atlas_size*scale[0]), int(state.atlas_size*scale[1]))
+        cr.rectangle(0, 0, int(size[0]*scale[0]), int(size[1]*scale[1]))
         cr.fill()
 
-        cr.set_source_rgb(0, 0, 0)
-        cr.set_line_width(0.1)
-        cr.translate(offset[0], offset[1])
-        cr.scale(scale[0], scale[1])
-        grid_step = state.get_grid_step()
-        for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
-            cr.move_to(0, y)
-            cr.line_to(self.allocation.width/scale[0], y)
+        layer = state.get_active_layer()
+        pointer = state.get_pointer_position()
+        
+        if layer == None:
+            cr.set_source_rgb(0.1, 0.1, 0.1)
+            f_size = 13
+            cr.set_font_size(f_size);
+            text = "There is no layer yet, add one please"
+            (x, y, width, height, dx, dy) = cr.text_extents(text)
+            cr.move_to(self.allocation.width/2-width/2, self.allocation.height/2);
+            cr.show_text(text);  
+        else:
+            if state.get_put_sprite():
+                sprite = state.get_selected_sprite()
+                cr.translate(offset[0]+pointer[0], offset[1]+pointer[1])
+                cr.scale(scale[0], scale[1])
+                sprite.draw_frame(cr, 0)
+                cr.identity_matrix()
 
-        for x in range(0, int(self.allocation.width/scale[0]), grid_step[0]):
-            cr.move_to(x, 0)
-            cr.line_to(x, self.allocation.height/scale[1])
-        cr.stroke()
-        cr.identity_matrix()
+            cr.translate(offset[0], offset[1])
+            cr.scale(scale[0], scale[1])
+            layer.draw(cr)
+            cr.identity_matrix()
+
+
+            cr.set_source_rgb(0, 0, 0)
+            cr.set_line_width(0.1)
+            cr.translate(offset[0], offset[1])
+            cr.scale(scale[0], scale[1])
+            grid_step = state.get_grid_step()
+            for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
+                cr.move_to(0, y)
+                cr.line_to(self.allocation.width/scale[0], y)
+
+            for x in range(0, int(self.allocation.width/scale[0]), grid_step[0]):
+                cr.move_to(x, 0)
+                cr.line_to(x, self.allocation.height/scale[1])
+            cr.stroke()
+            cr.identity_matrix()
 
         
-        images = state.get_images()
-        cr.translate(offset[0], offset[1])
-        cr.scale(state.scale[0], state.scale[1])
-        for img in images:
-            img.draw(cr)
-        cr.identity_matrix()
+        # images = state.get_images()
+        # cr.translate(offset[0], offset[1])
+        # cr.scale(state.scale[0], state.scale[1])
+        # for img in images:
+        #     img.draw(cr)
+        # cr.identity_matrix()
         
         cr_gdk.set_source_surface(cr_surf)
         cr_gdk.paint()

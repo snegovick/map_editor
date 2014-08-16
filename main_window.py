@@ -21,6 +21,7 @@ class MainWindow(object):
         self.open_project_item = gtk.MenuItem("Open project ...")
         self.save_project_item = gtk.MenuItem("Save project ...")
         sep_export_import = gtk.SeparatorMenuItem()
+        self.import_item = gtk.MenuItem("Import tileset ...")
         self.export_item = gtk.MenuItem("Export ...")
         self.quit_item = gtk.MenuItem("Quit")
         sep_quit = gtk.SeparatorMenuItem()
@@ -28,10 +29,12 @@ class MainWindow(object):
         self.file_menu.append(self.open_project_item)
         self.file_menu.append(self.save_project_item)
         self.file_menu.append(sep_export_import)
+        self.file_menu.append(self.import_item)
         self.file_menu.append(self.export_item)
         self.file_menu.append(sep_quit)
         self.file_menu.append(self.quit_item)
 
+        self.import_item.connect("activate", lambda *args: ep.push_event(EVEnum.import_click, args))
         self.export_item.connect("activate", lambda *args: ep.push_event(EVEnum.export_click, args))
         self.open_project_item.connect("activate", lambda *args: ep.push_event(EVEnum.load_project_click, args))
         self.save_project_item.connect("activate", lambda *args: ep.push_event(EVEnum.save_project_click, args))
@@ -135,6 +138,36 @@ class MainWindow(object):
         text = entry.get_text()
         md.destroy()
         return ret, text
+
+    def mk_addlayer_dialog(self, question):
+        md = gtk.Dialog(title=question, parent=self.window, flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
+        ok_button = md.add_button(gtk.STOCK_OK, gtk.RESPONSE_OK)
+        cancel_button = md.add_button(gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL)
+        ok_button.grab_default()
+        vbox = md.get_content_area()
+
+        l = gtk.Label(question)
+        l.show()
+        vbox.pack_start(l)
+
+        entry = gtk.Entry()
+        entry.show()
+        vbox.pack_start(entry)
+
+        check_button = gtk.CheckButton("Meta layer")
+        check_button.set_active(False)
+        check_button.unset_flags(gtk.CAN_FOCUS)
+        check_button.show()
+        vbox.pack_start(check_button)
+
+        response = md.run()
+        ret = True
+        meta = check_button.get_active()
+        if response == gtk.RESPONSE_CANCEL:
+            ret = False, None, None
+        text = entry.get_text()
+        md.destroy()
+        return ret, text, meta
 
     def mk_file_dialog(self, name, mimes):
         ret = None
@@ -269,18 +302,6 @@ class MainWindow(object):
     def __mk_left_vbox(self):
         self.left_vbox = gtk.VBox(homogeneous=False, spacing=0)
 
-        self.new_sprite_button = gtk.Button("New sprite from selection")
-        self.new_sprite_button.connect("clicked", lambda *args: ep.push_event(EVEnum.new_sprite_click, args))
-        self.left_vbox.pack_start(self.new_sprite_button, expand=False, fill=False, padding=0)
-
-        self.add_to_selected_sprite_button = gtk.Button("Add to selected sprite")
-        self.add_to_selected_sprite_button.connect("clicked", lambda *args: ep.push_event(EVEnum.add_to_selected_sprite_click, args))
-        self.left_vbox.pack_start(self.add_to_selected_sprite_button, expand=False, fill=False, padding=0)
-
-        self.load_image_button = gtk.Button("Load image")
-        self.load_image_button.connect("clicked", lambda *args: ep.push_event(EVEnum.load_image_click, args))
-        self.left_vbox.pack_start(self.load_image_button, expand=False, fill=False, padding=0)
-
         self.sprites_label = gtk.Label("Sprites")
         self.sp_scrolled_window = gtk.ScrolledWindow()
         self.sp_gtklist = gtk.List()
@@ -289,9 +310,23 @@ class MainWindow(object):
 
         self.left_vbox.pack_start(self.sprites_label, expand=False, fill=False, padding=0)
         self.left_vbox.pack_start(self.sp_scrolled_window, expand=True, fill=True, padding=0)
-        self.sprite_delete_button = gtk.Button("Delete sprite")
-        self.sprite_delete_button.connect("clicked", lambda *args: ep.push_event(EVEnum.sprite_delete_button_click, None))
-        self.left_vbox.pack_start(self.sprite_delete_button, expand=False, fill=False, padding=0)
 
+        self.sprite_put_button = gtk.Button("Put sprite")
+        self.sprite_put_button.connect("clicked", lambda *args: ep.push_event(EVEnum.sprite_put_button_click, None))
+        self.left_vbox.pack_start(self.sprite_put_button, expand=False, fill=False, padding=0)
 
+        self.layer_label = gtk.Label("Layers")
+        self.l_scrolled_window = gtk.ScrolledWindow()
+        self.l_gtklist = gtk.List()
+        self.l_gtklist.connect("selection_changed", lambda *args: ep.push_event(EVEnum.layers_selection_changed, args))
+        self.l_scrolled_window.add_with_viewport(self.l_gtklist)
+        self.left_vbox.pack_start(self.layer_label, expand=False, fill=False, padding=0)
+        self.left_vbox.pack_start(self.l_scrolled_window, expand=True, fill=True, padding=0)
 
+        self.layer_add_button = gtk.Button("Add layer")
+        self.layer_add_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_add_button_click, None))
+        self.left_vbox.pack_start(self.layer_add_button, expand=False, fill=False, padding=0)
+
+        self.layer_remove_button = gtk.Button("Delete layer")
+        self.layer_remove_button.connect("clicked", lambda *args: ep.push_event(EVEnum.layer_delete_button_click, None))
+        self.left_vbox.pack_start(self.layer_remove_button, expand=False, fill=False, padding=0)

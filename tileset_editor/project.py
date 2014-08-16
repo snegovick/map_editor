@@ -1,6 +1,7 @@
 import state
 
 import json
+import os
 
 class Project:
 
@@ -23,6 +24,8 @@ class Project:
             
 
     def save(self, path):
+        if os.path.splitext(path)[1][1:].strip() != "tset_project":
+            path+=".tset_project"
         f = open(path, "w")
         f.write(self.serialize())
         f.close()

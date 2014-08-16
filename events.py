@@ -7,6 +7,8 @@ from state import state, State
 from project import project
 from sprite import Sprite
 from tileset_editor import utils
+from layer import LayerType, Layer
+from proxy import Proxy
 
 class EVEnum:
     scroll_up = "scroll_up"
@@ -17,6 +19,11 @@ class EVEnum:
     pointer_motion = "pointer_motion"
     screen_left_press = "screen_left_press"
     screen_left_release = "screen_left_release"
+    import_click = "import_click"
+    sprite_put_button_click = "sprite_put_button_click"
+    sprites_selection_changed = "sprites_selection_changed"
+    layer_add_button_click = "layer_add_button_click"
+    layers_selection_changed = "layers_selection_changed"
 
 class EventProcessor(object):
     event_list = []
@@ -38,6 +45,11 @@ class EventProcessor(object):
             EVEnum.pointer_motion: self.pointer_motion,
             EVEnum.screen_left_press: self.screen_left_press,
             EVEnum.screen_left_release: self.screen_left_release,
+            EVEnum.import_click: self.import_click,
+            EVEnum.sprite_put_button_click: self.sprite_put_button_click,
+            EVEnum.sprites_selection_changed: self.sprites_selection_changed,
+            EVEnum.layer_add_button_click: self.layer_add_button_click,
+            EVEnum.layers_selection_changed: self.layers_selection_changed,
         }
 
     def reset(self):
@@ -73,7 +85,7 @@ class EventProcessor(object):
         state.set_shift_pressed()
 
     def shift_release(self, args):
-        state.reset_shift_pressed()
+        state.unset_shift_pressed()
 
     def pointer_motion(self, args):
         offset = state.get_offset()
@@ -81,17 +93,26 @@ class EventProcessor(object):
         cx = (args[0][0]-offset[0])/scale[0]
         cy = (args[0][1]-offset[1])/scale[1]
         pointer_position = (cx, cy)
+        grid_step = state.get_grid_step()
 
-        if state.get_left_press_start() != None:
-            prev_position = state.get_pointer_position()
-            grid_step = state.get_grid_step()
-            images = state.get_selected_images()
+        layer = state.get_active_layer()
+        if layer != None:
+            if state.get_put_sprite():
+                self.mw.widget.update()
 
-            for i in images:
-                nx = cx + self.relative_coords[i][0]
-                ny = cy + self.relative_coords[i][1]
-                i.set_origin((int(nx/grid_step[0])*grid_step[0], int(ny/grid_step[1])*grid_step[1]))
-            self.mw.widget.update()
+            if state.get_left_press_start() != None:
+                prev_position = state.get_pointer_position()
+
+                proxys = layer.get_selected_proxys()
+
+                for p in proxys:
+                    nx = cx + self.relative_coords[p][0]
+                    ny = cy + self.relative_coords[p][1]
+                    p.set_position((int(nx/grid_step[0])*grid_step[0], int(ny/grid_step[1])*grid_step[1]))
+                self.mw.widget.update()
+        nx = int(pointer_position[0]/grid_step[0])*grid_step[0]
+        ny = int(pointer_position[1]/grid_step[1])*grid_step[1]
+        pointer_position = [nx, ny]
         state.set_pointer_position(pointer_position)
         self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
 
@@ -101,37 +122,45 @@ class EventProcessor(object):
         cx = (args[0][0]-offset[0])/scale[0]
         cy = (args[0][1]-offset[1])/scale[1]
         state.set_left_press_start((cx, cy))
-        images = state.get_images()
-        selected_images = state.get_selected_images()
-        
-        if state.get_shift_pressed():
-            for img in images:
-                if img.point_in_aabb([cx, cy]):
-                    if not img.get_selected():
-                        state.add_im_to_selected(img)
-                    else:
-                        del self.relative_coords[img]
-                        state.remove_im_from_selected(img)
-        else:
-            selected = None
-            for img in images:
-                if img.point_in_aabb([cx, cy]):
-                    selected = img
-            if selected != None:
-                if selected.get_selected():
-                    state.unselect_all_images()
-                    self.relative_coords = {}
-                else:
-                    state.unselect_all_images()
-                    self.relative_coords = {}
-                    state.add_im_to_selected(selected)
-                    
-        self.mw.widget.update()
 
-        selected_images = state.get_selected_images()
-        self.relative_coords = {}
-        for i in selected_images:
-            self.relative_coords[i] = utils.mk_vect((cx, cy), i.get_origin())
+        layer = state.get_active_layer()
+        if layer != None:
+            if state.get_put_sprite():
+                state.unset_put_sprite()
+                p = Proxy(state.get_selected_sprite(), [cx, cy])
+                layer.add_proxy(p)
+                
+
+            proxy_lst = layer.get_proxy_lst()
+
+            if state.get_shift_pressed():
+                for p in proxy_lst:
+                    if p.point_in_aabb([cx, cy]):
+                        if not layer.get_selected():
+                            layer.add_proxy_to_selected(p)
+                        else:
+                            del self.relative_coords[p]
+                            layer.remove_proxy_from_selected(p)
+            else:
+                selected = None
+                for p in proxy_lst:
+                    if p.point_in_aabb([cx, cy]):
+                        selected = p
+                if selected != None:
+                    if selected.get_selected():
+                        layer.unselect_all_proxys()
+                        self.relative_coords = {}
+                    else:
+                        layer.unselect_all_proxys()
+                        self.relative_coords = {}
+                        layer.add_proxy_to_selected(selected)
+                    
+            self.mw.widget.update()
+
+            selected_proxys = layer.get_selected_proxys()
+            self.relative_coords = {}
+            for p in selected_proxys:
+                self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
 
     def screen_left_release(self, args):
         offset = state.get_offset()
@@ -139,7 +168,7 @@ class EventProcessor(object):
         cx = (args[0][0]-offset[0])/scale[0]
         cy = (args[0][1]-offset[1])/scale[1]
 
-        state.reset_left_press_start()
+        state.unset_left_press_start()
 
     def update_settings(self, args):
         new_value = args[0][1][0].get_value()
@@ -147,5 +176,59 @@ class EventProcessor(object):
         setting.set_value(new_value)
         project.push_state(state)
         self.mw.widget.update()
+
+    def update_sprites_list(self, args):
+        sprites = state.get_sprites()
+        if sprites != None:
+            self.mw.clear_list(self.mw.sp_gtklist)
+            for p in sprites:
+                self.mw.add_item_to_list(self.mw.sp_gtklist, p.name, None)
+        project.push_state(state)
+
+    def import_click(self, args):
+        mimes = [("Tileset (*.json)", "Application/json", "*.json")]
+        result = self.mw.mk_file_dialog("Open tileset ...", mimes)
+        if result != None:
+            tset_name = result
+            state.load_tileset(tset_name)
+            self.update_sprites_list(None)
+            self.mw.widget.update()
+
+    def sprites_selection_changed(self, args):
+        selection = args[0][0].get_selection()
+        state.unselect_sprite()
+        name = selection[0].children()[0].children()[1].get_text()
+        for s in state.get_sprites():
+            if s.name == name:
+                state.set_selected_sprite(s)
+                break
+
+    def sprite_put_button_click(self, args):
+        state.set_put_sprite()
+
+    def update_layers_list(self, args):
+        layers = state.get_layers()
+        if layers != None:
+            self.mw.clear_list(self.mw.l_gtklist)
+            for l in layers:
+                self.mw.add_item_to_list(self.mw.l_gtklist, l.name, None)
+        project.push_state(state)
+
+    def layer_add_button_click(self, args):
+        ok, name, meta = self.mw.mk_addlayer_dialog("Enter the name for new layer:")
+        if ok:
+            l_type = (LayerType.meta if meta else LayerType.sprite)
+            state.add_layer(name, meta)
+            self.update_layers_list(None)
+
+    def layers_selection_changed(self, args):
+        selection = args[0][0].get_selection()
+        name = selection[0].children()[0].children()[1].get_text()
+        for l in state.get_layers():
+            if l.name == name:
+                print "active layer:", l.name
+                state.set_active_layer(l)
+                self.mw.widget.update()
+                break
 
 ep = EventProcessor()
