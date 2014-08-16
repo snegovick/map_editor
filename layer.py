@@ -112,10 +112,8 @@ class Layer:
             del self.proxy_dct[name]
 
     def draw(self, cr, alpha):
-        print "proxy_dct:", self.proxy_dct
         for p in self.proxy_dct.values():
             p.draw(cr, alpha)
-
 
         cr.set_source_rgba(0, 0, 0, alpha)
         cr.set_line_width(1)

@@ -184,8 +184,9 @@ class EventProcessor(object):
         mimes = [("Images (*.png)", "Image/png", "*.png")]
         result = self.mw.mk_file_dialog("Open ...", mimes)
         if result != None:
-            image_name = result
-            state.load_image(image_name)
+            image_names = result
+            for n in image_names:
+                state.load_image(n)
             self.update_images_list(None)
             self.mw.widget.update()
 
@@ -224,16 +225,16 @@ class EventProcessor(object):
         
 
     def save_project_click(self, args):
-        mimes = [("Tileset project (*.tset)", "Application/tset", "*.tset")]
+        mimes = [("Tileset project (*.tset_project)", "Application/tset_project", "*.tset_project")]
         result = self.mw.mk_file_save_dialog("Save project ...", mimes)
         if result!=None:
             project.save(result)
 
     def load_project_click(self, args):
-        mimes = [("Tileset project (*.tset)", "Application/tset", "*.tset")]
+        mimes = [("Tileset project (*.tset_project)", "Application/tset_project", "*.tset_project")]
         result = self.mw.mk_file_dialog("Open project ...", mimes)
         if result!=None:
-            project.load(result)
+            project.load(result[0])
             self.update_images_list(None)
             self.update_sprites_list(None)
             self.mw.widget.update()

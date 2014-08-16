@@ -127,13 +127,13 @@ class State:
         return settings_lst
 
     def set_grid_x_s(self, setting):
-        self.grid_step[0] = setting.new_value
+        self.grid_step[0] = int(setting.new_value)
 
     def set_grid_y_s(self, setting):
-        self.grid_step[1] = setting.new_value
+        self.grid_step[1] = int(setting.new_value)
 
     def set_atlas_size_s(self, setting):
-        self.atlas_size = setting.new_value
+        self.atlas_size = int(setting.new_value)
 
     def export(self, path):
         image_path = path+".png"

@@ -24,10 +24,15 @@ class Image:
         cr.set_source_surface(self.cairo_img, 0, 0)
         cr.paint_with_alpha(1.0)
 
-        cr.set_source_rgba(1, 0, 0, 1)
-        cr.set_line_width(1)
-
         if self.selected:
+            cr.set_source_rgba(1, 0, 0, 1)
+            cr.set_line_width(1)        
+            cr.rectangle(0, 0, self.dimensions[0], self.dimensions[1])
+            cr.stroke()
+        else:
+            cr.set_source_rgba(0.1, 0.1, 0.1, 1)
+            cr.set_line_width(0.5)
+
             cr.rectangle(0, 0, self.dimensions[0], self.dimensions[1])
             cr.stroke()
         cr.translate(-self.origin[0], -self.origin[1])

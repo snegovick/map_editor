@@ -281,7 +281,10 @@ class EventProcessor(object):
                     break
 
     def sprite_put_button_click(self, args):
-        state.set_put_layer_object()
+        layer = state.get_active_layer()
+        if layer != None:
+            if layer.get_selected_layer_object()!=None:
+                state.set_put_layer_object()
 
     def update_layers_list(self, args):
         layers = state.get_layers()
@@ -373,8 +376,5 @@ class EventProcessor(object):
         result = self.mw.mk_file_save_dialog("Save map files ...", mimes)
         if result!=None:
             state.export(result)
-
-
-
-        
+       
 ep = EventProcessor()

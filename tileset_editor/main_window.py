@@ -142,6 +142,7 @@ class MainWindow(object):
                                        (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
                                         gtk.STOCK_OPEN, gtk.RESPONSE_OK))
         dialog.set_default_response(gtk.RESPONSE_OK)
+        dialog.set_select_multiple(True)
 
         for m in mimes:
             filter = gtk.FileFilter()
@@ -152,7 +153,7 @@ class MainWindow(object):
 
         response = dialog.run()
         if response == gtk.RESPONSE_OK:
-            ret = dialog.get_filename()
+            ret = dialog.get_filenames()
         elif response == gtk.RESPONSE_CANCEL:
             pass
         dialog.destroy()

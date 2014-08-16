@@ -163,10 +163,11 @@ class MainWindow(object):
         ret = True
         meta = check_button.get_active()
         if response == gtk.RESPONSE_CANCEL:
-            ret = False, None, None
+            md.destroy()
+            return False, None, None
         text = entry.get_text()
         md.destroy()
-        return ret, text, meta
+        return True, text, meta
 
     def mk_file_dialog(self, name, mimes):
         ret = None
