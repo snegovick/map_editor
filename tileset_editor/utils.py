@@ -361,6 +361,22 @@ class LineUtils:
     def __reproject_pt(self, pt, sina, cosa):
         return (pt[0]*cosa-pt[1]*sina, pt[0]*sina+pt[1]*cosa)
 
+def parse_args(argv, description):
+    current_arg = None
+    for arg in argv[1:]:
+        if current_arg != None:
+            description[current_arg]["arg"] = arg
+            current_arg = None
+        else:
+            if arg not in description:
+                print "unknown argument:", arg
+                return False
+            print "arg:", arg
+            description[arg]["present"] = True
+            if description[arg]["arglen"] == 1:
+                current_arg = arg
+    return True
+
 if __name__=="__main__":
     au = ArcUtils((0, 0), 1, -10*math.pi/180.0, 300*math.pi/180.0)
     

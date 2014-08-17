@@ -68,6 +68,10 @@ class State:
             self.selected_images.remove(im)
         im.unselect()
 
+    def remove_image(self, im):
+        if im in self.images:
+            self.images.remove(im)
+
     def get_selected_images(self):
         return self.selected_images
 
@@ -123,7 +127,7 @@ class State:
     def get_settings_list(self):
         settings_lst = [TOSetting("int", 0, None, self.grid_step[0], "Grid x step, px: ", self.set_grid_x_s),
                         TOSetting("int", 0, None, self.grid_step[1], "Grid y step, px: ", self.set_grid_y_s),
-                        TOSetting("int", 0, None, self.atlas_size, "Atlas size, px: ", self.set_atlas_size_s)]
+                        TOSetting("int", 0, 4096, self.atlas_size, "Atlas size, px: ", self.set_atlas_size_s)]
         return settings_lst
 
     def set_grid_x_s(self, setting):
@@ -154,7 +158,7 @@ class State:
             if s:
                 i.unselect()
 
-            i.draw(cr)
+            i.draw(cr, True)
 
             if s:
                 i.set_selected()

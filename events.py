@@ -227,7 +227,10 @@ class EventProcessor(object):
         state.unset_left_press_start()
 
     def update_settings(self, args):
-        new_value = args[0][1][0].get_value()
+        if hasattr(args[0][1][0], "get_value"):
+            new_value = args[0][1][0].get_value()
+        else:
+            new_value = args[0][1][0].get_active()
         setting = args[0][0]
         setting.set_value(new_value)
         project.push_state(state)

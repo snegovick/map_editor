@@ -5,6 +5,8 @@ import sys
 from events import EVEnum, EventProcessor, ep
 from main_window import MainWindow
 from state import state
+from project import project
+import utils
 
 width=640
 height=480
@@ -112,4 +114,23 @@ def run():
     mw.run()
 
 if __name__ == "__main__":
+    usage = "pythone tileset_editor.py [-h] [--reexport] [--project <path>] [--out <path>]"
+    if len(sys.argv) > 1:
+        description = {"-h": {"arglen": 0, "arg": None, "present": False},
+                       "--reexport": {"arglen": 0, "arg": None, "present": False},
+                       "--project": {"arglen": 1, "arg": None, "present": False},
+                       "--out": {"arglen": 1, "arg": None, "present": False}}
+        if utils.parse_args(sys.argv, description) == True:
+            if description["-h"]["present"]:
+                print usage
+                exit(0)
+            elif description["--reexport"]["present"]:
+                if description["--project"]["present"] and description["--out"]["present"]:
+                    project_path = description["--project"]["arg"]
+                    out_path = description["--out"]["arg"]
+                    print "Loading project from:", project_path
+                    project.load(project_path)
+                    print "Exporting project to:", out_path
+                    state.export(out_path)
+                    exit(0)
     run()

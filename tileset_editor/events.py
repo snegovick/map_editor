@@ -29,6 +29,8 @@ class EVEnum:
     sprite_image_remove_button_click = "sprite_image_remove_button_click"
     sprite_image_up_click = "sprite_image_up_click"
     sprite_image_down_click = "sprite_image_down_click"
+    delete_image_button_click = "delete_image_button_click"
+    sprite_delete_button_click = "sprite_delete_button_click"
 
 class EventProcessor(object):
     event_list = []
@@ -62,6 +64,8 @@ class EventProcessor(object):
             EVEnum.sprite_image_remove_button_click: self.sprite_image_remove_button_click,
             EVEnum.sprite_image_up_click: self.sprite_image_up_click,
             EVEnum.sprite_image_down_click: self.sprite_image_down_click,
+            EVEnum.delete_image_button_click: self.delete_image_button_click,
+            EVEnum.sprite_delete_button_click: self.sprite_delete_button_click,
         }
 
     def reset(self):
@@ -250,12 +254,13 @@ class EventProcessor(object):
 
     def sprites_selection_changed(self, args):
         selection = args[0][0].get_selection()
-        state.unselect_sprite()
-        name = selection[0].children()[0].children()[1].get_text()
-        for s in state.get_sprites():
-            if s.name == name:
-                state.set_selected_sprite(s)
-                self.update_sprite_images_list(None)
+        if len(selection)>0:
+            state.unselect_sprite()
+            name = selection[0].children()[0].children()[1].get_text()
+            for s in state.get_sprites():
+                if s.name == name:
+                    state.set_selected_sprite(s)
+                    self.update_sprite_images_list(None)
 
     def add_to_selected_sprite_click(self, args):
         sprite = state.get_selected_sprite()
@@ -294,5 +299,18 @@ class EventProcessor(object):
             if len(sprite.get_images()) > 1:
                 sprite.up_selected_image()
                 self.update_sprite_images_list(None)
+
+    def delete_image_button_click(self, args):
+        selected = state.get_selected_images()
+        for s in selected:
+            state.remove_image(s)
+            self.mw.widget.update()
+            self.update_images_list(None)
+
+    def sprite_delete_button_click(self, args):
+        sprite = state.get_selected_sprite()
+        if sprite != None:
+            state.remove_sprite(sprite)
+            self.update_sprites_list(None)
 
 ep = EventProcessor()

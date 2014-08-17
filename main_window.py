@@ -266,12 +266,12 @@ class MainWindow(object):
         hbox.pack_start(spin, expand=True, fill=True, padding=0)
         return hbox
 
-    def __mk_labeled_checkbox(self, dct, mlabel, callback=None, default=False):
+    def __mk_labeled_checkbox(self, dct, mlabel, data=None, callback=None, default=False):
         hbox = gtk.HBox(homogeneous=False, spacing=0)
         hbox.show()
         dct["hbox"] = hbox
         check = gtk.CheckButton(mlabel)
-        check.connect("clicked", lambda *args: ep.push_event(EVEnum.update_settings, (data, check.get_acrive())))
+        check.connect("clicked", lambda *args: ep.push_event(EVEnum.update_settings, (data, args)))
         check.show()
         dct["check"] = check
         hbox.pack_start(check, expand=True, fill=True, padding=0)

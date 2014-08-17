@@ -293,7 +293,7 @@ class MainWindow(object):
         self.left_vbox.pack_start(self.images_label, expand=False, fill=False, padding=0)
         self.left_vbox.pack_start(self.scrolled_window, expand=True, fill=True, padding=0)
         self.image_delete_button = gtk.Button("Delete image")
-        self.image_delete_button.connect("clicked", lambda *args: ep.push_event(EVEnum.image_delete_image_button_click, None))
+        self.image_delete_button.connect("clicked", lambda *args: ep.push_event(EVEnum.delete_image_button_click, None))
         self.left_vbox.pack_start(self.image_delete_button, expand=False, fill=False, padding=0)
 
         self.sprites_label = gtk.Label("Sprites")
