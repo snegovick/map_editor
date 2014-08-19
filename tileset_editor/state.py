@@ -140,9 +140,13 @@ class State:
         self.atlas_size = int(setting.new_value)
 
     def export(self, path):
+        if path[-3:] == "png":
+            path = path[:-4]
+        elif path[-4:] == "json":
+            path = path[:-5]
         image_path = path+".png"
         f = open(path+".json", "w")
-        f.write(json.dumps({"format": 1, "type": "tset", "image": image_path, "atlas_size": self.atlas_size, "images": [i.export() for i in self.images], "sprites": [s.export() for s in self.sprites]}))
+        f.write(json.dumps({"format": 1, "type": "tset", "image": os.path.relpath(image_path), "atlas_size": self.atlas_size, "images": [i.export() for i in self.images], "sprites": [s.export() for s in self.sprites]}))
         f.close()
         
         cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.atlas_size), int(self.atlas_size))

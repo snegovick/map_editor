@@ -1,5 +1,8 @@
 from generalized_settings import TOSetting
+
 import cairo
+import os
+
 import utils
 
 class Image:
@@ -79,7 +82,7 @@ class Image:
         return name
 
     def serialize(self):
-        return {"type": "image", "name": self.name, "origin": self.origin, "path": self.path}
+        return {"type": "image", "name": self.name, "origin": self.origin, "path": os.path.relpath(self.path)}
 
     def deserialize(self, data):
         self.name = data["name"]
