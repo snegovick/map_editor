@@ -88,7 +88,10 @@ class Image:
         self.name = data["name"]
         self.origin = data["origin"]
         self.path = data["path"]
-        self.cairo_img = cairo.ImageSurface.create_from_png(self.path)
+        try:
+            self.cairo_img = cairo.ImageSurface.create_from_png(self.path)
+        except:
+            print "Failed to read png from:", self.path
         self.dimensions = [self.cairo_img.get_width(), self.cairo_img.get_height()]
 
     def export(self):
