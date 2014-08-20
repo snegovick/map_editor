@@ -174,7 +174,7 @@ class State:
 
         for l in self.layers:
             if l.get_layer_type() == LayerType.sprite:
-                for p in self.get_proxys():
+                for p in l.get_proxys():
                     selected = p.get_selected()
                     if selected:
                         p.unset_selected()
