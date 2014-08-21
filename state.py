@@ -153,6 +153,11 @@ class State:
         self.map_size[1] = int(setting.new_value)
 
     def export(self, path):
+        if path[-4:] == ".png":
+            path = path[:-5]
+        elif path[-5:] == ".json":
+            path = path[:-5]
+
         image_path = path+".png"
         
         f = open(path+".json", "w")

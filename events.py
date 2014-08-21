@@ -127,6 +127,7 @@ class EventProcessor(object):
                     nx = cx + self.relative_coords[p][0]
                     ny = cy + self.relative_coords[p][1]
                     p.set_position((int(nx/grid_step[0])*grid_step[0], int(ny/grid_step[1])*grid_step[1]))
+                    layer.resort_all_proxys()
                 self.mw.widget.update()
         nx = int(pointer_position[0]/grid_step[0])*grid_step[0]
         ny = int(pointer_position[1]/grid_step[1])*grid_step[1]
@@ -134,33 +135,6 @@ class EventProcessor(object):
         state.set_pointer_position(pointer_position)
         self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
     
-    def general_unselect_all_elements(self, args):
-        lst = args["lst"]
-        for e in lst.children():
-            lst.unselect_child(e)
-
-
-    def general_unselect_element(self, args):
-        lst = args["lst"]
-        name = args["name"]
-        for e in lst.children():
-            hb = e.children()[0]
-            if hb.children()[1].get_text() == name:
-                lst.unselect_child(e)
-                break
-
-    def general_set_selected_element(self, args):
-        lst = args["lst"]
-        element_name = args["name"]
-        element = args["element"]
-        for e in lst.children():
-            hb = e.children()[0]
-            if hb.children()[1].get_text() == element_name:
-                lst.select_child(e)
-                #self.layer_objects_selection_changed(element)
-            # else:
-            #     lst.unselect_child(e)
-
     def screen_left_press(self, args):
         offset = state.get_offset()
         scale = state.get_scale()
@@ -227,6 +201,34 @@ class EventProcessor(object):
         cy = (args[0][1]-offset[1])/scale[1]
 
         state.unset_left_press_start()
+
+    def general_unselect_all_elements(self, args):
+        lst = args["lst"]
+        for e in lst.children():
+            lst.unselect_child(e)
+
+
+    def general_unselect_element(self, args):
+        lst = args["lst"]
+        name = args["name"]
+        for e in lst.children():
+            hb = e.children()[0]
+            if hb.children()[1].get_text() == name:
+                lst.unselect_child(e)
+                break
+
+    def general_set_selected_element(self, args):
+        lst = args["lst"]
+        element_name = args["name"]
+        element = args["element"]
+        for e in lst.children():
+            hb = e.children()[0]
+            if hb.children()[1].get_text() == element_name:
+                lst.select_child(e)
+                #self.layer_objects_selection_changed(element)
+            # else:
+            #     lst.unselect_child(e)
+
 
     def update_settings(self, args):
         if hasattr(args[0][1][0], "get_value"):
@@ -390,7 +392,7 @@ class EventProcessor(object):
             for p in selected_proxys:
                 layer.remove_proxy_by_id(p.id)
             self.update_layer_objects_list(None)
-            self.mw.widget.update()                        
+            self.mw.widget.update()
 
 
 ep = EventProcessor()

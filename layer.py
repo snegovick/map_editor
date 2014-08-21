@@ -12,6 +12,7 @@ class Layer:
         self.proxy_dct = {}
         self.last_id = 0
         self.selected_proxys = []
+        self.sorted_proxys = []
         self.selected_lo = None
         self.ignore_next_selection_change = False
         self.state = state
@@ -23,7 +24,7 @@ class Layer:
             self.name = name
         else:
             self.deserialize(data)
-        
+            self.resort_all_proxys()
 
     def get_ignore_next_selection_change(self):
         return self.ignore_next_selection_change
@@ -84,6 +85,9 @@ class Layer:
     def get_name(self):
         return self.name
 
+    def resort_all_proxys(self):
+        self.sorted_proxys = sorted(self.proxy_dct.values(), key=lambda v: v.position[0]*v.position[1])
+
     def add_proxy(self, pt):
         p = None
         p = Proxy(self.get_selected_layer_object(), position=pt)
@@ -92,18 +96,22 @@ class Layer:
         self.proxy_dct[self.last_id] = p
         if self.layer_type == LayerType.meta:
             self.adjacency_dct[self.last_id] = []
+        else:
+            self.resort_all_proxys()
 
         self.last_id += 1
 
     def get_proxy_lst(self):
-        return self.proxy_dct.values()        
+        return self.sorted_proxys
 
     def remove_proxy_by_id(self, pid):
         if pid in self.proxy_dct:
             del self.proxy_dct[pid]
+            if self.layer_type == LayerType.meta:
+                del self.adjacency_dct[pid]
 
     def draw(self, cr, alpha):
-        for p in self.proxy_dct.values():
+        for p in self.sorted_proxys:
             p.draw(cr, alpha)
 
         cr.set_source_rgba(0, 0, 0, alpha)
@@ -114,7 +122,6 @@ class Layer:
                 start = self.proxy_dct[k].get_position()
                 for id in self.adjacency_dct[k]:
                     end = self.proxy_dct[id].get_position()
-                    print "line:", start, end
                     cr.move_to(start[0], start[1])
                     cr.line_to(end[0], end[1])
 
@@ -131,10 +138,10 @@ class Layer:
                     cr.stroke()
 
     def export(self):
-        return {"type": "layer", "name": self.name, "adjacency_dct": self.adjacency_dct, "objects": [p.serialize() for p in self.proxy_dct.values()]}
+        return {"type": "layer", "name": self.name, "adjacency_dct": self.adjacency_dct, "objects": [p.serialize() for p in self.sorted_proxys]}
 
     def serialize(self):
-        return {"type": "layer", "name": self.name, "layer_type": self.layer_type, "adjacency_dct": self.adjacency_dct, "proxys": [p.serialize() for p in self.proxy_dct.values()]}
+        return {"type": "layer", "name": self.name, "layer_type": self.layer_type, "adjacency_dct": self.adjacency_dct, "proxys": [p.serialize() for p in self.sorted_proxys]}
 
     def deserialize(self, data):
         from state import state
