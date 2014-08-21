@@ -31,6 +31,7 @@ class EVEnum:
     load_project_click = "load_project_click"
     save_project_click = "save_project_click"
     export_click = "export_click"
+    layer_delete_object_button_click = "layer_delete_object_button_click"
 
 class EventProcessor(object):
     event_list = []
@@ -64,6 +65,7 @@ class EventProcessor(object):
             EVEnum.load_project_click: self.load_project_click,
             EVEnum.save_project_click: self.save_project_click,
             EVEnum.export_click: self.export_click,
+            EVEnum.layer_delete_object_button_click: self.layer_delete_object_button_click,
         }
 
     def reset(self):
@@ -379,5 +381,16 @@ class EventProcessor(object):
         result = self.mw.mk_file_save_dialog("Save map files ...", mimes)
         if result!=None:
             state.export(result)
-       
+
+    def layer_delete_object_button_click(self, args):
+        layer = state.get_active_layer()
+        if layer != None:
+            selected_proxys = layer.get_selected_proxys()
+            layer.unselect_all_proxys()
+            for p in selected_proxys:
+                layer.remove_proxy_by_id(p.id)
+            self.update_layer_objects_list(None)
+            self.mw.widget.update()                        
+
+
 ep = EventProcessor()
