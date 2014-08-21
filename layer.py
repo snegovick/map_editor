@@ -34,15 +34,6 @@ class Layer:
     def unset_ignore_next_selection_change(self):
         self.ignore_next_selection_change = False
             
-    def get_wait_child(self):
-        return self.wait_child
-
-    def set_wait_child(self):
-        self.wait_child = True
-
-    def unset_wait_child(self):
-        self.wait_child = False
-            
     def get_current_parent_object(self):
         return self.current_parent_object
 
@@ -107,9 +98,9 @@ class Layer:
     def get_proxy_lst(self):
         return self.proxy_dct.values()        
 
-    def remove_proxy_by_id(self, name):
-        if name in self.proxy_list:
-            del self.proxy_dct[name]
+    def remove_proxy_by_id(self, pid):
+        if pid in self.proxy_dct:
+            del self.proxy_dct[pid]
 
     def draw(self, cr, alpha):
         for p in self.proxy_dct.values():
