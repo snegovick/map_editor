@@ -202,6 +202,16 @@ class EventProcessor(object):
 
         state.unset_left_press_start()
 
+    def update_settings(self, args):
+        if hasattr(args[0][1][0], "get_value"):
+            new_value = args[0][1][0].get_value()
+        else:
+            new_value = args[0][1][0].get_active()
+        setting = args[0][0]
+        setting.set_value(new_value)
+        project.push_state(state)
+        self.mw.widget.update()
+
     def general_unselect_all_elements(self, args):
         lst = args["lst"]
         for e in lst.children():
@@ -228,17 +238,6 @@ class EventProcessor(object):
                 #self.layer_objects_selection_changed(element)
             # else:
             #     lst.unselect_child(e)
-
-
-    def update_settings(self, args):
-        if hasattr(args[0][1][0], "get_value"):
-            new_value = args[0][1][0].get_value()
-        else:
-            new_value = args[0][1][0].get_active()
-        setting = args[0][0]
-        setting.set_value(new_value)
-        project.push_state(state)
-        self.mw.widget.update()
 
     def general_selection_changed(self, args):
         lst = args[0]["lst"][0]
@@ -392,7 +391,7 @@ class EventProcessor(object):
             for p in selected_proxys:
                 layer.remove_proxy_by_id(p.id)
             self.update_layer_objects_list(None)
-            self.mw.widget.update()
+            self.mw.widget.update()                        
 
 
 ep = EventProcessor()
