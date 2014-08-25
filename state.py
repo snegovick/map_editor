@@ -116,8 +116,8 @@ class State:
             if data["type"] == "tset":
                 image_path = data["image"]
                 self.atlas = cairo.ImageSurface.create_from_png(image_path)
-                self.images = [Image(self.atlas, i) for i in data["images"]]
-                self.sprites = [Sprite(self, s) for s in data["sprites"]]
+                self.images = [Image(self.atlas, i) for i in data["images"].values()]
+                self.sprites = [Sprite(self, s) for s in data["sprites"].values()]
             else:
                 print "Unknown file format:", data["type"]
         else:
