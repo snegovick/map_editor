@@ -114,8 +114,8 @@ class State:
         print "data:", data
         if data["format"] == 1:
             if data["type"] == "tset":
-                image_path = data["image"]
-                self.atlas = cairo.ImageSurface.create_from_png(image_path)
+                self.image_path = data["image"]
+                self.atlas = cairo.ImageSurface.create_from_png(self.image_path)
                 self.images = [Image(self.atlas, i) for i in data["images"].values()]
                 self.sprites = [Sprite(self, s) for s in data["sprites"].values()]
             else:
@@ -167,7 +167,7 @@ class State:
         images = {}
         for i in self.images:
             images[i.name] = i.export()
-        f.write(json.dumps({"format": 1, "type": "map", "tileset_path": self.tileset_path, "layers": [l.export() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
+        f.write(json.dumps({"format": 1, "type": "map", "atlas_path": os.path.relpath(self.image_path), "layers": [l.export() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
         f.close()
 
         cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.map_size[1]*self.grid_step[0]), int(self.map_size[1]*self.grid_step[1]))
