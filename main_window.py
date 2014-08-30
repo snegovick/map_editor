@@ -61,9 +61,9 @@ class MainWindow(object):
 
         self.widget_hbox = gtk.HBox(homogeneous=False, spacing=0)
         self.widget_vbox = gtk.VBox(homogeneous=False, spacing=0)
-        self.widget_hscroll = gtk.HScrollbar(gtk.Adjustment(0.0, -1000.0, 1000.0, 0.1, 1.0, 1.0))
+        self.widget_hscroll = gtk.HScrollbar(gtk.Adjustment(0.0, 0.0, 0.0, 10.0, 100.0, 1.0))
         self.widget_hscroll.connect("value-changed", lambda *args: ep.push_event(EVEnum.hscroll, (args)))
-        self.widget_vscroll = gtk.VScrollbar(gtk.Adjustment(0.0, -1000.0, 1000.0, 0.1, 1.0, 1.0))
+        self.widget_vscroll = gtk.VScrollbar(gtk.Adjustment(0.0, 0.0, 0.0, 10.0, 100.0, 1.0))
         self.widget_vscroll.connect("value-changed", lambda *args: ep.push_event(EVEnum.vscroll, (args)))
         self.widget_hbox.pack_start(self.widget, expand=True, fill=True, padding=0)
         self.widget_hbox.pack_start(self.widget_vscroll, expand=False, fill=False, padding=0)
@@ -83,22 +83,25 @@ class MainWindow(object):
         self.window.present()
         gtk.main()
 
-    def new_settings_vbox(self, settings_lst, label):
-        for c in self.settings_vb.children():
-            self.settings_vb.remove(c)
+    def new_settings_vbox(self, settings_lst, label, settings_vb=None):
+        if settings_vb==None:
+            settings_vb = self.settings_vb
+
+        for c in settings_vb.children():
+            settings_vb.remove(c)
         if settings_lst == None:
             return
         l = gtk.Label(label)
-        self.settings_vb.pack_start(l, expand=False, fill=False, padding=0)
+        settings_vb.pack_start(l, expand=False, fill=False, padding=0)
         l.show()
         for s in settings_lst:
             dct = {}
             if s.type == "int":
                 w = self.__mk_labeled_spin(dct, s.display_name, s, None, s.default, s.min, s.max)
-                self.settings_vb.pack_start(w, expand=False, fill=False, padding=0)
+                settings_vb.pack_start(w, expand=False, fill=False, padding=0)
             elif s.type == "bool":
                 w = self.__mk_labeled_checkbox(dct, s.display_name, s, s.default)
-                self.settings_vb.pack_start(w, expand=False, fill=False, padding=0)
+                settings_vb.pack_start(w, expand=False, fill=False, padding=0)
 
     def mk_question_dialog(self, question):
         md = gtk.Dialog(title=question, parent=self.window, flags=gtk.DIALOG_MODAL | gtk.DIALOG_DESTROY_WITH_PARENT)
@@ -277,23 +280,18 @@ class MainWindow(object):
         hbox.pack_start(check, expand=True, fill=True, padding=0)
         return hbox
 
+    def update_general_settings(self):
+        settings_lst = state.get_settings_list()
+        self.new_settings_vbox(settings_lst, "General settings", self.general_settings_vb)        
+
     def __mk_right_vbox(self):
         self.right_vbox = gtk.VBox(homogeneous=False, spacing=0)
 
-        self.tool_label = gtk.Label("General settings")
-        self.right_vbox.pack_start(self.tool_label, expand=False, fill=False, padding=0)
 
-        settings_lst = state.get_settings_list()
-        if settings_lst != None:
-            for s in settings_lst:
-                dct = {}
-                if s.type == "int":
-                    w = self.__mk_labeled_spin(dct, s.display_name, s, None, s.default, s.min, s.max)
-                    self.right_vbox.pack_start(w, expand=False, fill=False, padding=0)
-                elif s.type == "bool":
-                    w = self.__mk_labeled_checkbox(dct, s.display_name, s, s.default)
-                    self.right_vbox.pack_start(w, expand=False, fill=False, padding=0)
+        self.general_settings_vb = gtk.VBox(homogeneous=False, spacing=0)
+        self.update_general_settings()
 
+        self.right_vbox.pack_start(self.general_settings_vb, expand=False, fill=False, padding=0)
 
         self.settings_vb = gtk.VBox(homogeneous=False, spacing=0)
         self.right_vbox.pack_start(self.settings_vb, expand=False, fill=False, padding=0)

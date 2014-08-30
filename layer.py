@@ -79,25 +79,40 @@ class Layer:
         return self.selected_lo
 
     def get_selected_proxys(self):
-        print "selected:", self.selected_proxys
+        #print "selected:", self.selected_proxys
         return self.selected_proxys
 
     def get_name(self):
         return self.name
 
+    def __get_iso_xy(self, p):
+        return ((p[0] - p[1]), ((p[0]/2.0)+(p[1]/2.0)))
+
     def resort_all_proxys(self):
-        self.sorted_proxys = sorted(self.proxy_dct.values(), key=lambda v: v.position[0]*v.position[1])
+        self.sorted_proxys = []
+
+        ylayers = {}
+        
+        for p in self.proxy_dct.values():
+            if p.position[1] not in ylayers:
+                ylayers[p.position[1]] = []
+            ylayers[p.position[1]].append(p)
+
+        for k in sorted(ylayers.keys()):
+            ylayers[k] = sorted(ylayers[k], key=lambda v: v.position[0])
+            self.sorted_proxys+=ylayers[k]
+
 
     def add_proxy(self, pt):
-        p = None
+        print "selected lo:", self.get_selected_layer_object()
         p = Proxy(self.get_selected_layer_object(), position=pt)
         p.name = str(self.last_id)
         p.id = self.last_id
         self.proxy_dct[self.last_id] = p
         if self.layer_type == LayerType.meta:
-            self.adjacency_dct[self.last_id] = []
-        else:
-            self.resort_all_proxys()
+            print "adding meta"
+            self.adjacency_dct[self.last_id] = []            
+        self.resort_all_proxys()
 
         self.last_id += 1
 
@@ -111,8 +126,7 @@ class Layer:
             del self.proxy_dct[pid]
             if self.layer_type == LayerType.meta:
                 del self.adjacency_dct[pid]
-            else:
-                self.resort_all_proxys()
+            self.resort_all_proxys()
 
     def draw(self, cr, alpha):
         for p in self.sorted_proxys:

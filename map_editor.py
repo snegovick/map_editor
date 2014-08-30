@@ -43,10 +43,16 @@ class Screen(gtk.DrawingArea):
             ep.push_event(EVEnum.deselect_all, (None))
         elif event.keyval == 65505: # shift
             ep.push_event(EVEnum.shift_press, (None))
+        elif event.keyval == 65507: # ctrl
+            ep.push_event(EVEnum.ctrl_press, (None))
+
 
     def key_release_event(self, widget, event):
         if event.keyval == 65505: # shift
             ep.push_event(EVEnum.shift_release, (None))
+        elif event.keyval == 65507: # ctrl
+            ep.push_event(EVEnum.ctrl_release, (None))
+
 
     def button_release_event(self, widget, event):
         if event.button == 1:
@@ -59,7 +65,8 @@ class Screen(gtk.DrawingArea):
     def do_expose_event(self, event):
         # Create the cairo context
         #state.offset = (self.allocation.width/2,self.allocation.height/2)
-        state.set_screen_offset((self.allocation.width/2, self.allocation.height/2))
+        #state.set_screen_offset((self.allocation.width/2, self.allocation.height/2))
+        state.set_screen_offset((0, 0))
         scale = state.get_scale()
         
         offset = state.get_offset()
@@ -113,13 +120,13 @@ class Screen(gtk.DrawingArea):
             cr.translate(offset[0], offset[1])
             cr.scale(scale[0], scale[1])
             grid_step = state.get_grid_step()
-            for y in range(0, int(self.allocation.height/scale[1]), grid_step[1]):
+            for y in range(0, int(size[1]), grid_step[1]):
                 cr.move_to(0, y)
-                cr.line_to(self.allocation.width/scale[0], y)
+                cr.line_to(size[0], y)
 
-            for x in range(0, int(self.allocation.width/scale[0]), grid_step[0]):
+            for x in range(0, int(size[0]), grid_step[0]):
                 cr.move_to(x, 0)
-                cr.line_to(x, self.allocation.height/scale[1])
+                cr.line_to(x, size[1])
             cr.stroke()
             cr.identity_matrix()
 
@@ -136,6 +143,7 @@ class Screen(gtk.DrawingArea):
 
 mw = MainWindow(width, height, Screen)
 ep.mw = mw
+state.mw = mw
 
         
 # GTK mumbo-jumbo to show the widget in a window and quit when it's closed

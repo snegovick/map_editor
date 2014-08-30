@@ -18,7 +18,7 @@ class Image:
         return self.dimensions
 
     def draw(self, cr, alpha):
-        print "image name:", self.name
+        #print "image name:", self.name
         cr.set_source_surface(self.surf, 0, 0)
         cr.paint_with_alpha(alpha)
 

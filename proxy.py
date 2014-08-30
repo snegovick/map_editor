@@ -66,6 +66,8 @@ class Proxy:
 
     def draw(self, cr, alpha):
         cr.translate(self.position[0], self.position[1])
+        #print "id:", self.id, "x, y:", self.position
+        
         if self.animated:
             if (time.time()-self.animation_timer > 1.0/self.frame_time):
                 self.animation_frame = (self.animation_frame + 1) % self.sprite.get_animation_length()

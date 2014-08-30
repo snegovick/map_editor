@@ -13,8 +13,11 @@ class State:
         self.scale = [1, 1]
         self.left_press_start = None
         self.shift_pressed = False
+        self.ctrl_pressed = False
         self.pointer_position = None
-        self.offset = [0, 0]
+        self.__total_offset = (0,0)
+        self.__screen_offset = (0,0)
+        self.__base_offset = (0,0)
         self.put_lo = False
         self.active_layer = None
 
@@ -64,6 +67,15 @@ class State:
     def unset_shift_pressed(self):
         self.shift_pressed = False
 
+    def get_ctrl_pressed(self):
+        return self.ctrl_pressed
+
+    def set_ctrl_pressed(self):
+        self.ctrl_pressed = True
+
+    def unset_ctrl_pressed(self):
+        self.ctrl_pressed = False
+
     def set_left_press_start(self, ps):
         if self.left_press_start == None:
             self.left_press_start = [0,0]
@@ -83,7 +95,9 @@ class State:
         return self.pointer_position
 
     def set_screen_offset(self, offset):
-        pass
+        if self.__screen_offset != offset:
+            self.__screen_offset = offset
+            self.__total_offset = (self.__base_offset[0]+self.__screen_offset[0], self.__base_offset[1]+self.__screen_offset[1])
 
     def get_scale(self):
         return self.scale
@@ -93,7 +107,14 @@ class State:
         self.scale[1] = scale[1]
 
     def get_offset(self):
-        return self.offset
+        return self.__total_offset
+
+    def get_base_offset(self):
+        return self.__base_offset
+
+    def set_base_offset(self, offset):
+        self.__base_offset = offset
+        self.__total_offset = (self.__base_offset[0]+self.__screen_offset[0], self.__base_offset[1]+self.__screen_offset[1])
 
     def get_sprites(self):
         return self.sprites
@@ -148,9 +169,11 @@ class State:
 
     def set_map_size_x_s(self, setting):
         self.map_size[0] = int(setting.new_value)
+        self.mw.widget_hscroll.set_range(-self.map_size[0]*self.grid_step[0], self.map_size[0]*self.grid_step[0])
 
     def set_map_size_y_s(self, setting):
         self.map_size[1] = int(setting.new_value)
+        self.mw.widget_vscroll.set_range(-self.map_size[1]*self.grid_step[1], self.map_size[1]*self.grid_step[1])
 
     def export(self, path):
         if path[-4:] == ".png":
@@ -198,9 +221,12 @@ class State:
     def deserialize(self, data):
         self.map_size = data["map_size"]
         self.grid_step = data["grid_step"]
+        self.mw.widget_vscroll.set_range(-self.map_size[1]*self.grid_step[1], self.map_size[1]*self.grid_step[1])
+        self.mw.widget_hscroll.set_range(-self.map_size[0]*self.grid_step[0], self.map_size[0]*self.grid_step[0])
         if data["tileset_path"] != None:
             self.load_tileset(data["tileset_path"])
         self.layers = [Layer(state=self, data=l) for l in data["layers"]]
+        self.mw.update_general_settings()
     
     def set(self, state):
         self = state

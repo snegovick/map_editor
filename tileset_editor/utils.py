@@ -38,7 +38,7 @@ class OverlapEnum:
 
 class AABB:
     def __init__(self, sx, sy, ex, ey):
-        print sx, sy, ex, ey
+        #print sx, sy, ex, ey
         self.left = min(sx, ex)
         self.right = max(sx, ex)
         self.top = max(sy, ey)

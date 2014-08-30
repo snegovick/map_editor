@@ -16,6 +16,8 @@ class EVEnum:
     update_settings = "update_settings"
     shift_press = "shift_press"
     shift_release = "shift_release"
+    ctrl_press = "ctrl_press"
+    ctrl_release = "ctrl_release"
     pointer_motion = "pointer_motion"
     screen_left_press = "screen_left_press"
     screen_left_release = "screen_left_release"
@@ -33,6 +35,8 @@ class EVEnum:
     export_click = "export_click"
     layer_delete_object_button_click = "layer_delete_object_button_click"
     deselect_all = "deselect_all"
+    hscroll = "hscroll"
+    vscroll = "vscroll"
 
 class EventProcessor(object):
     event_list = []
@@ -41,7 +45,6 @@ class EventProcessor(object):
     selected_tool_operation = None
     left_press_start = None
     pointer_position = None
-    shift_pressed = False
     relative_coords = {}
 
     def __init__(self):
@@ -51,6 +54,8 @@ class EventProcessor(object):
             EVEnum.update_settings: self.update_settings,
             EVEnum.shift_press: self.shift_press,
             EVEnum.shift_release: self.shift_release,
+            EVEnum.ctrl_press: self.ctrl_press,
+            EVEnum.ctrl_release: self.ctrl_release,
             EVEnum.pointer_motion: self.pointer_motion,
             EVEnum.screen_left_press: self.screen_left_press,
             EVEnum.screen_left_release: self.screen_left_release,
@@ -68,6 +73,8 @@ class EventProcessor(object):
             EVEnum.export_click: self.export_click,
             EVEnum.layer_delete_object_button_click: self.layer_delete_object_button_click,
             EVEnum.deselect_all: self.deselect_all,
+            EVEnum.hscroll: self.hscroll,
+            EVEnum.vscroll: self.vscroll,
         }
 
     def reset(self):
@@ -89,21 +96,42 @@ class EventProcessor(object):
         self.event_list = []
 
     def scroll_up(self, args):
-        scale = state.get_scale()
-        state.set_scale((scale[0]+0.1, scale[1]+0.1))
+        if state.get_shift_pressed():
+            offset = state.get_base_offset()
+            self.hscroll_base(offset[0]-state.get_grid_step()[0])
+        elif state.get_ctrl_pressed():
+            offset = state.get_base_offset()
+            self.vscroll_base(offset[1]-state.get_grid_step()[1])
+        else:
+            scale = state.get_scale()
+            state.set_scale((scale[0]+0.1, scale[1]+0.1))
         self.mw.widget.update()
 
     def scroll_down(self, args):
-        scale = state.get_scale()
-        if scale[0]>0.2:
-            state.set_scale((scale[0]-0.1, scale[1]-0.1))
-            self.mw.widget.update()
+        if state.get_shift_pressed():
+            offset = state.get_base_offset()
+            self.hscroll_base(offset[0]+state.get_grid_step()[0])
+        elif state.get_ctrl_pressed():
+            offset = state.get_base_offset()
+            self.vscroll_base(offset[1]+state.get_grid_step()[1])
+        else:
+            scale = state.get_scale()
+            if scale[0]>0.2:
+                state.set_scale((scale[0]-0.1, scale[1]-0.1))
+                self.mw.widget.update()
+        self.mw.widget.update()
 
     def shift_press(self, args):
         state.set_shift_pressed()
 
     def shift_release(self, args):
         state.unset_shift_pressed()
+
+    def ctrl_press(self, args):
+        state.set_ctrl_pressed()
+
+    def ctrl_release(self, args):
+        state.unset_ctrl_pressed()
 
     def pointer_motion(self, args):
         offset = state.get_offset()
@@ -145,6 +173,66 @@ class EventProcessor(object):
         state.set_left_press_start((cx, cy))
         grid_step = state.get_grid_step()
         layer = state.get_active_layer()
+        # if layer != None:
+        #     if state.get_put_layer_object():
+        #         state.unset_put_layer_object()
+        #         nx = int(cx/grid_step[0])*grid_step[0]
+        #         ny = int(cy/grid_step[1])*grid_step[1]
+        #         pt = [nx, ny]
+        #         layer.add_proxy(pt)
+        #         self.update_layer_objects_list(None)
+                
+        #     proxy_lst = layer.get_proxy_lst()
+
+        #     if state.get_shift_pressed():
+        #         for p in proxy_lst:
+        #             if p.point_in_aabb([cx, cy]):
+        #                 if not p.get_selected():
+        #                     self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": p.name, "element": p})
+        #                     layer.add_proxy_to_selected(p)
+        #                     layer.set_ignore_next_selection_change()
+        #                 else:
+        #                     if p in self.relative_coords:
+        #                         del self.relative_coords[p]
+        #                     self.general_unselect_element({"lst": self.mw.lo_gtklist, "name": p.name})
+        #                     layer.remove_proxy_from_selected(p)
+        #     else:
+        #         selected = None
+        #         for p in proxy_lst:
+        #             if p.point_in_aabb([cx, cy]):
+        #                 selected = p
+        #         if selected != None:
+        #             if selected.get_selected():
+        #                 self.relative_coords = {}
+        #                 self.general_unselect_all_elements({"lst": self.mw.lo_gtklist})
+        #                 print "click"
+        #                 layer.unselect_all_proxys()
+        #             else:
+        #                 self.relative_coords = {}
+        #                 self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": selected.name, "element": selected})
+        #                 layer.add_proxy_to_selected(p)
+        #                 layer.set_ignore_next_selection_change()
+
+        #     self.mw.widget.update()
+
+        #     selected_proxys = layer.get_selected_proxys()
+        #     if len(selected_proxys) == 2:
+        #         if layer.get_layer_type() == LayerType.meta:
+        #             self.mw.layer_set_child_button.set_sensitive(True)
+
+        #     self.relative_coords = {}
+        #     for p in selected_proxys:
+        #         self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
+
+    def screen_left_release(self, args):
+        offset = state.get_offset()
+        scale = state.get_scale()
+        cx = (args[0][0]-offset[0])/scale[0]
+        cy = (args[0][1]-offset[1])/scale[1]
+
+        grid_step = state.get_grid_step()
+        layer = state.get_active_layer()
+
         if layer != None:
             if state.get_put_layer_object():
                 state.unset_put_layer_object()
@@ -196,11 +284,6 @@ class EventProcessor(object):
             for p in selected_proxys:
                 self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
 
-    def screen_left_release(self, args):
-        offset = state.get_offset()
-        scale = state.get_scale()
-        cx = (args[0][0]-offset[0])/scale[0]
-        cy = (args[0][1]-offset[1])/scale[1]
 
         state.unset_left_press_start()
 
@@ -405,5 +488,23 @@ class EventProcessor(object):
             self.update_layer_objects_list(None)
             self.update_sprites_list(None)
             self.update_layers_list(None)
+
+    def hscroll_base(self, arg):
+        offset = state.get_base_offset()
+        state.set_base_offset((arg, offset[1]))
+        self.mw.widget.update()
+
+    def hscroll(self, args):
+        print args[0][0].get_value()
+        self.hscroll_base(args[0][0].get_value())
+
+    def vscroll_base(self, arg):
+        offset = state.get_base_offset()
+        state.set_base_offset((offset[0], arg))
+        self.mw.widget.update()
+
+    def vscroll(self, args):
+        print args[0][0].get_value()
+        self.vscroll_base(args[0][0].get_value())
 
 ep = EventProcessor()
