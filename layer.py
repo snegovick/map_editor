@@ -105,10 +105,14 @@ class Layer:
         return self.sorted_proxys
 
     def remove_proxy_by_id(self, pid):
+        print "removing id:", pid
+        print "proxy_dct:", self.proxy_dct
         if pid in self.proxy_dct:
             del self.proxy_dct[pid]
             if self.layer_type == LayerType.meta:
                 del self.adjacency_dct[pid]
+            else:
+                self.resort_all_proxys()
 
     def draw(self, cr, alpha):
         for p in self.sorted_proxys:
@@ -161,4 +165,4 @@ class Layer:
                 proxy = Proxy(state=state, data=p)
             self.proxy_dct[proxy.id] = proxy
                 
-        self.last_id = proxy.id+1
+        self.last_id = max(self.proxy_dct.keys())+1
