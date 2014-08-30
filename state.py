@@ -190,7 +190,11 @@ class State:
         images = {}
         for i in self.images:
             images[i.name] = i.export()
-        f.write(json.dumps({"format": 1, "type": "map", "atlas_path": os.path.relpath(self.image_path), "layers": [l.export() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
+
+        layers = {}
+        for l in self.layers:
+            layers[l.name] = l.export()
+        f.write(json.dumps({"format": 1, "type": "map", "atlas_path": os.path.relpath(self.image_path), "layers": layers, "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
         f.close()
 
         cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.map_size[1]*self.grid_step[0]), int(self.map_size[1]*self.grid_step[1]))
