@@ -32,6 +32,7 @@ class EVEnum:
     save_project_click = "save_project_click"
     export_click = "export_click"
     layer_delete_object_button_click = "layer_delete_object_button_click"
+    deselect_all = "deselect_all"
 
 class EventProcessor(object):
     event_list = []
@@ -66,6 +67,7 @@ class EventProcessor(object):
             EVEnum.save_project_click: self.save_project_click,
             EVEnum.export_click: self.export_click,
             EVEnum.layer_delete_object_button_click: self.layer_delete_object_button_click,
+            EVEnum.deselect_all: self.deselect_all,
         }
 
     def reset(self):
@@ -391,7 +393,17 @@ class EventProcessor(object):
             for p in selected_proxys:
                 layer.remove_proxy_by_id(p.id)
             self.update_layer_objects_list(None)
-            self.mw.widget.update()                        
+            self.mw.widget.update()
 
+    def deselect_all(self, args):
+        layer = state.get_active_layer()
+        if layer != None:
+            selected_proxys = layer.get_selected_proxys()
+            layer.unselect_all_proxys()
+            state.unset_put_layer_object()
+            self.mw.widget.update()            
+            self.update_layer_objects_list(None)
+            self.update_sprites_list(None)
+            self.update_layers_list(None)
 
 ep = EventProcessor()
