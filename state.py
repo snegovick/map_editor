@@ -220,7 +220,7 @@ class State:
 
 
     def serialize(self):
-        return {"format": 1, "type": "state", "tileset_path": self.tileset_path, "layers": [l.serialize() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step}
+        return {"format": 1, "type": "state", "tileset_path": os.path.relpath(self.tileset_path), "layers": [l.serialize() for l in self.layers], "map_size": self.map_size, "grid_step": self.grid_step}
 
     def deserialize(self, data):
         self.map_size = data["map_size"]
