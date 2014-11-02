@@ -183,4 +183,7 @@ class Layer:
                 proxy = Proxy(state=state, data=p)
             self.proxy_dct[proxy.id] = proxy
                 
-        self.last_id = max(self.proxy_dct.keys())+1
+        #print "proxy_dct:", self.proxy_dct
+        if len(self.proxy_dct.keys()) > 0:
+            self.last_id = max(self.proxy_dct.keys())+1
+        self.last_id = 1
