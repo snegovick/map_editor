@@ -108,6 +108,7 @@ class Layer:
         p = Proxy(self.get_selected_layer_object(), position=pt)
         p.name = str(self.last_id)
         p.id = self.last_id
+        print "new proxy id:", p.id
         self.proxy_dct[self.last_id] = p
         if self.layer_type == LayerType.meta:
             print "adding meta"
@@ -186,4 +187,5 @@ class Layer:
         #print "proxy_dct:", self.proxy_dct
         if len(self.proxy_dct.keys()) > 0:
             self.last_id = max(self.proxy_dct.keys())+1
-        self.last_id = 1
+        else:
+            self.last_id = 0

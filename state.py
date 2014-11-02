@@ -8,8 +8,10 @@ from image import Image
 from sprite import Sprite
 from layer import Layer, LayerType
 
+DEFAULT_SCREEN_SIZE = [1024, 768]
+
 class State:
-    def __init__(self, grid_step=[32,32], map_size=[64, 64], data=None):
+    def __init__(self, grid_step=[32,32], map_size=[64, 64], screen_size=None, data=None):
         self.scale = [1, 1]
         self.left_press_start = None
         self.shift_pressed = False
@@ -29,8 +31,12 @@ class State:
             self.images = []
             self.layers = []
             self.map_size = map_size
+            if screen_size == None:
+                self.screen_size = DEFAULT_SCREEN_SIZE
+
         else:
             self.deserialize(data)
+
 
     def get_sprite_by_name(self, n):
         for s in self.sprites:
@@ -106,6 +112,9 @@ class State:
         self.scale[0] = scale[0]
         self.scale[1] = scale[1]
 
+    def get_screen_size(self):
+        return self.screen_size
+
     def get_offset(self):
         return self.__total_offset
 
@@ -158,7 +167,9 @@ class State:
         settings_lst = [TOSetting("int", 0, None, self.grid_step[0], "Grid x step, px: ", self.set_grid_x_s),
                         TOSetting("int", 0, None, self.grid_step[1], "Grid y step, px: ", self.set_grid_y_s),
                         TOSetting("int", 0, None, self.map_size[0], "Map size x, px: ", self.set_map_size_x_s),
-                        TOSetting("int", 0, None, self.map_size[1], "Map size y, px: ", self.set_map_size_y_s)]
+                        TOSetting("int", 0, None, self.map_size[1], "Map size y, px: ", self.set_map_size_y_s),
+                        TOSetting("int", 0, 9999, self.screen_size[0], "Screen size x, px: ", self.set_screen_size_x_s),
+                        TOSetting("int", 0, 9999, self.screen_size[1], "Screen size y, px: ", self.set_screen_size_y_s)]
         return settings_lst
 
     def set_grid_x_s(self, setting):
@@ -166,6 +177,12 @@ class State:
 
     def set_grid_y_s(self, setting):
         self.grid_step[1] = int(setting.new_value)
+
+    def set_screen_size_x_s(self, setting):
+        self.screen_size[0] = int(setting.new_value)
+
+    def set_screen_size_y_s(self, setting):
+        self.screen_size[1] = int(setting.new_value)
 
     def set_map_size_x_s(self, setting):
         self.map_size[0] = int(setting.new_value)
@@ -194,7 +211,7 @@ class State:
         layers = {}
         for l in self.layers:
             layers[l.name] = l.export()
-        f.write(json.dumps({"format": 1, "type": "map", "atlas_path": os.path.relpath(self.image_path), "layers": layers, "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images}))
+        f.write(json.dumps({"format": 1, "type": "map", "atlas_path": os.path.relpath(self.image_path), "layers": layers, "map_size": self.map_size, "grid_step": self.grid_step, "sprites": sprites, "images": images, "screen_size": self.screen_size}))
         f.close()
 
         cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(self.map_size[1]*self.grid_step[0]), int(self.map_size[1]*self.grid_step[1]))
@@ -225,6 +242,11 @@ class State:
     def deserialize(self, data):
         self.map_size = data["map_size"]
         self.grid_step = data["grid_step"]
+        if ("screen_size" in data):
+            self.screen_size = data["screen_size"]
+        else:
+            self.screen_size = DEFAULT_SCREEN_SIZE
+
         self.mw.widget_vscroll.set_range(-self.map_size[1]*self.grid_step[1], self.map_size[1]*self.grid_step[1])
         self.mw.widget_hscroll.set_range(-self.map_size[0]*self.grid_step[0], self.map_size[0]*self.grid_step[0])
         if data["tileset_path"] != None:

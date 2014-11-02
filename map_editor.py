@@ -97,7 +97,7 @@ class Screen(gtk.DrawingArea):
             text = "There is no layer yet, add one please"
             (x, y, width, height, dx, dy) = cr.text_extents(text)
             cr.move_to(self.allocation.width/2-width/2, self.allocation.height/2)
-            cr.show_text(text);  
+            cr.show_text(text);
         else:
             layer = state.get_active_layer()
             if state.get_put_layer_object():
@@ -132,7 +132,15 @@ class Screen(gtk.DrawingArea):
             cr.stroke()
             cr.identity_matrix()
 
-        
+        screen_size = state.get_screen_size()
+        cr.set_source_rgba(0.5, 0.5, 0.5, 0.5)
+        cr.rectangle(int(screen_size[0]*scale[0]), 0, int(size[0]*scale[0]), int(size[1]*scale[1]))
+        cr.fill()
+
+        cr.set_source_rgba(0.5, 0.5, 0.5, 0.5)
+        cr.rectangle(0, int(screen_size[1]*scale[1]), int(size[0]*scale[0]), int(size[1]*scale[1]))
+        cr.fill()
+
         # images = state.get_images()
         # cr.translate(offset[0], offset[1])
         # cr.scale(state.scale[0], state.scale[1])
