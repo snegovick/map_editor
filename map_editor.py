@@ -45,6 +45,8 @@ class Screen(gtk.DrawingArea):
             ep.push_event(EVEnum.shift_press, (None))
         elif event.keyval == 65507: # ctrl
             ep.push_event(EVEnum.ctrl_press, (None))
+        elif event.keyval == 65535: # delete
+            ep.push_event(EVEnum.delete_press, (None))
 
 
     def key_release_event(self, widget, event):

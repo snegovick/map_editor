@@ -37,6 +37,7 @@ class EVEnum:
     deselect_all = "deselect_all"
     hscroll = "hscroll"
     vscroll = "vscroll"
+    delete_press = "delete_press"
 
 class EventProcessor(object):
     event_list = []
@@ -75,6 +76,7 @@ class EventProcessor(object):
             EVEnum.deselect_all: self.deselect_all,
             EVEnum.hscroll: self.hscroll,
             EVEnum.vscroll: self.vscroll,
+            EVEnum.delete_press: self.delete_press,
         }
 
     def reset(self):
@@ -467,6 +469,9 @@ class EventProcessor(object):
         result = self.mw.mk_file_save_dialog("Save map files ...", mimes)
         if result!=None:
             state.export(result)
+
+    def delete_press(self, args):
+        self.layer_delete_object_button_click(None)
 
     def layer_delete_object_button_click(self, args):
         layer = state.get_active_layer()
