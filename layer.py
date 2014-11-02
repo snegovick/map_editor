@@ -121,12 +121,16 @@ class Layer:
 
     def remove_proxy_by_id(self, pid):
         print "removing id:", pid
-        print "proxy_dct:", self.proxy_dct
+        #print "proxy_dct:", self.proxy_dct
         if pid in self.proxy_dct:
             del self.proxy_dct[pid]
             if self.layer_type == LayerType.meta:
                 del self.adjacency_dct[pid]
+                for k, v in self.adjacency_dct.iteritems():
+                    if pid in v:
+                        self.adjacency_dct[k].remove(pid)
             self.resort_all_proxys()
+        #print "proxy_dct after remove:", self.proxy_dct
 
     def draw(self, cr, alpha):
         for p in self.sorted_proxys:
