@@ -76,7 +76,7 @@ class Screen(gtk.DrawingArea):
         cr_gdk = self.window.cairo_create()
         surface = cr_gdk.get_target()
         size = state.get_map_size_px()
-        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, int(size[0]*scale[0]), int(size[1]*scale[1]))
+        cr_surf = cairo.ImageSurface(cairo.FORMAT_ARGB32, event.area.width, event.area.height)
         cr = cairo.Context(cr_surf)
         
         # Restrict Cairo to the exposed area; avoid extra work
@@ -134,11 +134,11 @@ class Screen(gtk.DrawingArea):
 
         screen_size = state.get_screen_size()
         cr.set_source_rgba(0.5, 0.5, 0.5, 0.5)
-        cr.rectangle(int(screen_size[0]*scale[0]), 0, int(size[0]*scale[0]), int(size[1]*scale[1]))
+        cr.rectangle(int(screen_size[0]*scale[0]), 0, event.area.width, event.area.height)
         cr.fill()
 
         cr.set_source_rgba(0.5, 0.5, 0.5, 0.5)
-        cr.rectangle(0, int(screen_size[1]*scale[1]), int(size[0]*scale[0]), int(size[1]*scale[1]))
+        cr.rectangle(0, int(screen_size[1]*scale[1]), event.area.width, event.area.height)
         cr.fill()
 
         # images = state.get_images()
