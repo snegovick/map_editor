@@ -6,9 +6,10 @@ import sys
 from state import state, State
 from project import project
 from sprite import Sprite
-from tileset_editor import utils
 from layer import LayerType, Layer
 from proxy import Proxy
+
+from tileset_editor import utils
 
 class EVEnum:
     scroll_up = "scroll_up"
@@ -38,6 +39,8 @@ class EVEnum:
     hscroll = "hscroll"
     vscroll = "vscroll"
     delete_press = "delete_press"
+    set_selection_mode = "set_selection_mode"
+    unset_selection_mode = "unset_selection_mode"
 
 class EventProcessor(object):
     event_list = []
@@ -77,6 +80,8 @@ class EventProcessor(object):
             EVEnum.hscroll: self.hscroll,
             EVEnum.vscroll: self.vscroll,
             EVEnum.delete_press: self.delete_press,
+            EVEnum.set_selection_mode: self.set_selection_mode,
+            EVEnum.unset_selection_mode: self.unset_selection_mode,
         }
 
     def reset(self):
@@ -135,6 +140,19 @@ class EventProcessor(object):
     def ctrl_release(self, args):
         state.unset_ctrl_pressed()
 
+    def set_selection_mode(self, args):
+        print "set selection mode"
+        if state.is_selection_mode():
+            self.unset_selection_mode(None)
+        else:
+            state.set_selection_mode()
+            pointer_pos = state.get_pointer_position()
+            state.set_selection_box_origin(pointer_pos[0], pointer_pos[1])
+
+    def unset_selection_mode(self, args):
+        print "unset selection mode"
+        state.unset_selection_mode()
+
     def pointer_motion(self, args):
         offset = state.get_offset()
         scale = state.get_scale()
@@ -142,6 +160,10 @@ class EventProcessor(object):
         cy = (args[0][1]-offset[1])/scale[1]
         pointer_position = (cx, cy)
         grid_step = state.get_grid_step()
+        nx = int(pointer_position[0]/grid_step[0])*grid_step[0]
+        ny = int(pointer_position[1]/grid_step[1])*grid_step[1]
+        pointer_position = [nx, ny]
+
 
         layer = state.get_active_layer()
         if layer != None:
@@ -160,12 +182,28 @@ class EventProcessor(object):
                     ny = cy + self.relative_coords[p][1]
                     p.set_position((int(nx/grid_step[0])*grid_step[0], int(ny/grid_step[1])*grid_step[1]))
                     layer.resort_all_proxys()
-                self.mw.widget.update()
-        nx = int(pointer_position[0]/grid_step[0])*grid_step[0]
-        ny = int(pointer_position[1]/grid_step[1])*grid_step[1]
-        pointer_position = [nx, ny]
+                
+            if state.is_selection_mode():
+                if state.get_update_selection_box_selection():
+                    state.update_selection_box(nx, ny)
+                    sb = state.get_selection_box()
+                    select_aabb = utils.AABB(sb[0], sb[1], sb[2], sb[3])
+                    self.deselect_all(None, noupdate=True)
+                    for p in layer.get_proxy_lst():
+                        p_aabb = p.get_aabb()
+                        if (p_aabb != None):
+                            #print "proxy_aabb:", p_aabb
+                            #print "select:", select_aabb
+
+                            overlap = select_aabb.aabb_in_aabb(p_aabb)
+                            #print "overlap",overlap
+                            if (overlap != utils.OverlapEnum.no_overlap) and (overlap != utils.OverlapEnum.fully_lays_inside):
+                                p.set_selected()
+                                layer.add_proxy_to_selected_fast(p)
+            self.mw.widget.update()
         state.set_pointer_position(pointer_position)
         self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
+
     
     def screen_left_press(self, args):
         offset = state.get_offset()
@@ -175,56 +213,6 @@ class EventProcessor(object):
         state.set_left_press_start((cx, cy))
         grid_step = state.get_grid_step()
         layer = state.get_active_layer()
-        # if layer != None:
-        #     if state.get_put_layer_object():
-        #         state.unset_put_layer_object()
-        #         nx = int(cx/grid_step[0])*grid_step[0]
-        #         ny = int(cy/grid_step[1])*grid_step[1]
-        #         pt = [nx, ny]
-        #         layer.add_proxy(pt)
-        #         self.update_layer_objects_list(None)
-                
-        #     proxy_lst = layer.get_proxy_lst()
-
-        #     if state.get_shift_pressed():
-        #         for p in proxy_lst:
-        #             if p.point_in_aabb([cx, cy]):
-        #                 if not p.get_selected():
-        #                     self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": p.name, "element": p})
-        #                     layer.add_proxy_to_selected(p)
-        #                     layer.set_ignore_next_selection_change()
-        #                 else:
-        #                     if p in self.relative_coords:
-        #                         del self.relative_coords[p]
-        #                     self.general_unselect_element({"lst": self.mw.lo_gtklist, "name": p.name})
-        #                     layer.remove_proxy_from_selected(p)
-        #     else:
-        #         selected = None
-        #         for p in proxy_lst:
-        #             if p.point_in_aabb([cx, cy]):
-        #                 selected = p
-        #         if selected != None:
-        #             if selected.get_selected():
-        #                 self.relative_coords = {}
-        #                 self.general_unselect_all_elements({"lst": self.mw.lo_gtklist})
-        #                 print "click"
-        #                 layer.unselect_all_proxys()
-        #             else:
-        #                 self.relative_coords = {}
-        #                 self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": selected.name, "element": selected})
-        #                 layer.add_proxy_to_selected(p)
-        #                 layer.set_ignore_next_selection_change()
-
-        #     self.mw.widget.update()
-
-        #     selected_proxys = layer.get_selected_proxys()
-        #     if len(selected_proxys) == 2:
-        #         if layer.get_layer_type() == LayerType.meta:
-        #             self.mw.layer_set_child_button.set_sensitive(True)
-
-        #     self.relative_coords = {}
-        #     for p in selected_proxys:
-        #         self.relative_coords[p] = utils.mk_vect((cx, cy), p.get_position())
 
     def screen_left_release(self, args):
         offset = state.get_offset()
@@ -236,44 +224,47 @@ class EventProcessor(object):
         layer = state.get_active_layer()
 
         if layer != None:
-            if state.get_put_layer_object():
-                state.unset_put_layer_object()
-                nx = int(cx/grid_step[0])*grid_step[0]
-                ny = int(cy/grid_step[1])*grid_step[1]
-                pt = [nx, ny]
-                layer.add_proxy(pt)
-                self.update_layer_objects_list(None)
-                
-            proxy_lst = layer.get_proxy_lst()
+            if state.is_selection_mode():
+                pass
+            else:
+                if state.get_put_layer_object():
+                    state.unset_put_layer_object()
+                    nx = int(cx/grid_step[0])*grid_step[0]
+                    ny = int(cy/grid_step[1])*grid_step[1]
+                    pt = [nx, ny]
+                    layer.add_proxy(pt)
+                    self.update_layer_objects_list(None)
 
-            if state.get_shift_pressed():
-                for p in proxy_lst:
-                    if p.point_in_aabb([cx, cy]):
-                        if not p.get_selected():
-                            self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": p.name, "element": p})
+                proxy_lst = layer.get_proxy_lst()
+
+                if state.get_shift_pressed():
+                    for p in proxy_lst:
+                        if p.point_in_aabb([cx, cy]):
+                            if not p.get_selected():
+                                self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": p.name, "element": p})
+                                layer.add_proxy_to_selected(p)
+                                layer.set_ignore_next_selection_change()
+                            else:
+                                if p in self.relative_coords:
+                                    del self.relative_coords[p]
+                                self.general_unselect_element({"lst": self.mw.lo_gtklist, "name": p.name})
+                                layer.remove_proxy_from_selected(p)
+                else:
+                    selected = None
+                    for p in proxy_lst:
+                        if p.point_in_aabb([cx, cy]):
+                            selected = p
+                    if selected != None:
+                        if selected.get_selected():
+                            self.relative_coords = {}
+                            self.general_unselect_all_elements({"lst": self.mw.lo_gtklist})
+                            print "click"
+                            layer.unselect_all_proxys()
+                        else:
+                            self.relative_coords = {}
+                            self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": selected.name, "element": selected})
                             layer.add_proxy_to_selected(p)
                             layer.set_ignore_next_selection_change()
-                        else:
-                            if p in self.relative_coords:
-                                del self.relative_coords[p]
-                            self.general_unselect_element({"lst": self.mw.lo_gtklist, "name": p.name})
-                            layer.remove_proxy_from_selected(p)
-            else:
-                selected = None
-                for p in proxy_lst:
-                    if p.point_in_aabb([cx, cy]):
-                        selected = p
-                if selected != None:
-                    if selected.get_selected():
-                        self.relative_coords = {}
-                        self.general_unselect_all_elements({"lst": self.mw.lo_gtklist})
-                        print "click"
-                        layer.unselect_all_proxys()
-                    else:
-                        self.relative_coords = {}
-                        self.general_set_selected_element({"lst": self.mw.lo_gtklist, "name": selected.name, "element": selected})
-                        layer.add_proxy_to_selected(p)
-                        layer.set_ignore_next_selection_change()
 
             self.mw.widget.update()
 
@@ -483,14 +474,15 @@ class EventProcessor(object):
             self.update_layer_objects_list(None)
             self.mw.widget.update()
 
-    def deselect_all(self, args):
+    def deselect_all(self, args, noupdate=False):
         layer = state.get_active_layer()
         if layer != None:
             selected_proxys = layer.get_selected_proxys()
             layer.unselect_all_proxys()
             state.unset_put_layer_object()
-            self.mw.widget.update()            
-            self.update_layer_objects_list(None)
+            if not noupdate:
+                self.mw.widget.update()
+                self.update_layer_objects_list(None)
             self.update_sprites_list(None)
             self.update_layers_list(None)
 

@@ -1,4 +1,5 @@
 from tileset_editor.generalized_settings import TOSetting
+from tileset_editor import utils
 
 import json
 import os
@@ -22,6 +23,9 @@ class State:
         self.__base_offset = (0,0)
         self.put_lo = False
         self.active_layer = None
+        self.selection_mode = False
+        self.selection_box = [0,0,0,0]
+        self.prev_selection_box = [0,0,0,0]
 
         if data == None:
             self.atlas = None
@@ -37,6 +41,32 @@ class State:
         else:
             self.deserialize(data)
 
+    def is_selection_mode(self):
+        return self.selection_mode
+
+    def set_selection_mode(self):
+        self.selection_mode = True
+
+    def set_selection_box_origin(self, x, y):
+        self.selection_box[0] = x
+        self.selection_box[1] = y
+        self.update_selection_box(x, y)
+        self.prev_selection_box = self.selection_box[:]
+
+    def update_selection_box(self, x, y):
+        self.prev_selection_box = self.selection_box[:]
+        self.selection_box[2] = x
+        self.selection_box[3] = y
+
+    def get_selection_box(self):
+        return self.selection_box
+
+    def get_update_selection_box_selection(self):
+        return True
+
+    def unset_selection_mode(self):
+        self.selection_mode = False
+        self.selection_box = [0,0,0,0]
 
     def get_sprite_by_name(self, n):
         for s in self.sprites:

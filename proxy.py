@@ -38,6 +38,9 @@ class Proxy:
     def point_in_aabb(self, pt):
         return self.aabb.point_in_aabb(pt)
 
+    def get_aabb(self):
+        return self.aabb
+
     def get_position(self):
         return self.position
 

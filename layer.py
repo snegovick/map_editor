@@ -62,7 +62,12 @@ class Layer:
         if p not in self.selected_proxys:
             self.selected_proxys.append(p)
             p.set_selected()
-        print "add:", self.selected_proxys
+        #print "add:", self.selected_proxys
+
+    def add_proxy_to_selected_fast(self, p):
+        self.selected_proxys.append(p)
+        p.set_selected()
+        #print "add:", self.selected_proxys
 
     def remove_proxy_from_selected(self, p):
         if p in self.selected_proxys:

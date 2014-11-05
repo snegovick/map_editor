@@ -47,14 +47,16 @@ class Screen(gtk.DrawingArea):
             ep.push_event(EVEnum.ctrl_press, (None))
         elif event.keyval == 65535: # delete
             ep.push_event(EVEnum.delete_press, (None))
-
+        elif event.keyval == 115: # s key (start selection)
+            ep.push_event(EVEnum.set_selection_mode, (None))
 
     def key_release_event(self, widget, event):
         if event.keyval == 65505: # shift
             ep.push_event(EVEnum.shift_release, (None))
         elif event.keyval == 65507: # ctrl
             ep.push_event(EVEnum.ctrl_release, (None))
-
+        # elif event.keyval == 115: # s key (stop selection)
+        #     ep.push_event(EVEnum.unset_selection_mode, (None))
 
     def button_release_event(self, widget, event):
         if event.button == 1:
@@ -139,6 +141,23 @@ class Screen(gtk.DrawingArea):
 
         cr.set_source_rgba(0.5, 0.5, 0.5, 0.5)
         cr.rectangle(0, int(screen_size[1]*scale[1]), event.area.width, event.area.height)
+        cr.fill()
+
+
+        sel_box = state.get_selection_box()
+        sx = min(sel_box[0], sel_box[2])
+        ex = max(sel_box[0], sel_box[2])
+        sy = min(sel_box[1], sel_box[3])
+        ey = max(sel_box[1], sel_box[3])
+
+        w = ex - sx
+        h = ey - sy
+        sel_box = [sx, sy, w, h]
+
+        print "sel_box:", sel_box
+        print "offset:", offset, "scale:", scale
+        cr.set_source_rgba(0.7, 0.7, 0.9, 0.5)
+        cr.rectangle(int(sel_box[0]*scale[0]), int(sel_box[1]*scale[1]), int(sel_box[2]*scale[0]), int(sel_box[3]*scale[1]))
         cr.fill()
 
         # images = state.get_images()
