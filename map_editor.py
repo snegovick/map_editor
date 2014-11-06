@@ -145,27 +145,21 @@ class Screen(gtk.DrawingArea):
 
 
         sel_box = state.get_selection_box()
-        sx = min(sel_box[0], sel_box[2])
-        ex = max(sel_box[0], sel_box[2])
-        sy = min(sel_box[1], sel_box[3])
-        ey = max(sel_box[1], sel_box[3])
+        if state.is_selection_mode():
+            sx = min(sel_box[0], sel_box[2])
+            ex = max(sel_box[0], sel_box[2])
+            sy = min(sel_box[1], sel_box[3])
+            ey = max(sel_box[1], sel_box[3])
 
-        w = ex - sx
-        h = ey - sy
-        sel_box = [sx, sy, w, h]
+            w = ex - sx
+            h = ey - sy
+            sel_box = [sx, sy, w, h]
 
-        print "sel_box:", sel_box
-        print "offset:", offset, "scale:", scale
-        cr.set_source_rgba(0.7, 0.7, 0.9, 0.5)
-        cr.rectangle(int(sel_box[0]*scale[0]), int(sel_box[1]*scale[1]), int(sel_box[2]*scale[0]), int(sel_box[3]*scale[1]))
-        cr.fill()
-
-        # images = state.get_images()
-        # cr.translate(offset[0], offset[1])
-        # cr.scale(state.scale[0], state.scale[1])
-        # for img in images:
-        #     img.draw(cr)
-        # cr.identity_matrix()
+            #print "sel_box:", sel_box
+            #print "offset:", offset, "scale:", scale
+            cr.set_source_rgba(0.7, 0.7, 0.9, 0.5)
+            cr.rectangle(int(sel_box[0]*scale[0]), int(sel_box[1]*scale[1]), int(sel_box[2]*scale[0]), int(sel_box[3]*scale[1]))
+            cr.fill()
         
         cr_gdk.set_source_surface(cr_surf)
         cr_gdk.paint()

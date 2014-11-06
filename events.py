@@ -113,6 +113,8 @@ class EventProcessor(object):
             scale = state.get_scale()
             state.set_scale((scale[0]+0.1, scale[1]+0.1))
         self.mw.widget.update()
+        scale = state.get_scale()
+        self.mw.scale_label.set_text("Scale: %.1f:%.1f"%(scale[0], scale[1]))
 
     def scroll_down(self, args):
         if state.get_shift_pressed():
@@ -127,6 +129,9 @@ class EventProcessor(object):
                 state.set_scale((scale[0]-0.1, scale[1]-0.1))
                 self.mw.widget.update()
         self.mw.widget.update()
+        scale = state.get_scale()
+        self.mw.scale_label.set_text("Scale: %.1f:%.1f"%(scale[0], scale[1]))
+
 
     def shift_press(self, args):
         state.set_shift_pressed()
@@ -144,10 +149,12 @@ class EventProcessor(object):
         print "set selection mode"
         if state.is_selection_mode():
             self.unset_selection_mode(None)
+            self.mw.mode_label.set_text("Mode: normal")
         else:
             state.set_selection_mode()
             pointer_pos = state.get_pointer_position()
             state.set_selection_box_origin(pointer_pos[0], pointer_pos[1])
+            self.mw.mode_label.set_text("Mode: select")
 
     def unset_selection_mode(self, args):
         print "unset selection mode"
@@ -202,7 +209,7 @@ class EventProcessor(object):
                                 layer.add_proxy_to_selected_fast(p)
             self.mw.widget.update()
         state.set_pointer_position(pointer_position)
-        self.mw.cursor_pos_label.set_text("%.3f:%.3f"%(cx, cy))
+        self.mw.cursor_pos_label.set_text("Pos: %.3f:%.3f"%(cx, cy))
 
     
     def screen_left_press(self, args):
@@ -503,5 +510,6 @@ class EventProcessor(object):
     def vscroll(self, args):
         print args[0][0].get_value()
         self.vscroll_base(args[0][0].get_value())
+
 
 ep = EventProcessor()
